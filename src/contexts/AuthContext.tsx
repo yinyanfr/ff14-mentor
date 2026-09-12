@@ -1,9 +1,7 @@
 import {
   GoogleAuthProvider,
-  getRedirectResult,
   onAuthStateChanged,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   type User,
 } from 'firebase/auth'
@@ -38,11 +36,9 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
 
   useEffect(() => {
     let active = true
-    void authPersistenceReady
-      .then(() => getRedirectResult(auth))
-      .catch(() => {
-        if (active) setErrorKey('auth.signInFailed')
-      })
+    void authPersistenceReady.catch(() => {
+      if (active) setErrorKey('auth.signInFailed')
+    })
 
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       if (!active) return
@@ -62,17 +58,10 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     setErrorKey(null)
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
-    const prefersRedirect =
-      window.matchMedia('(max-width: 767px)').matches ||
-      window.matchMedia('(pointer: coarse)').matches
 
     try {
       await authPersistenceReady
-      if (prefersRedirect) {
-        await signInWithRedirect(auth, provider)
-      } else {
-        await signInWithPopup(auth, provider)
-      }
+      await signInWithPopup(auth, provider)
     } catch {
       setErrorKey('auth.signInFailed')
       setBusy(false)
