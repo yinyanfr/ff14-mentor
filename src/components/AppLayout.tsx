@@ -20,6 +20,16 @@ const navItems = [
   { to: '/stats', key: 'nav.stats', icon: BarChart3, end: false },
 ] as const
 
+const localeShortLabels: Record<Locale, string> = {
+  'zh-CN': '中',
+  'zh-TW': '繁',
+  ja: '日',
+  en: 'EN',
+  de: 'DE',
+  fr: 'FR',
+  ko: '한',
+}
+
 export function AppLayout() {
   const { t } = useTranslation()
   const { locale, setLocale, theme, toggleTheme } = usePreferences()
@@ -61,6 +71,9 @@ export function AppLayout() {
                 </option>
               ))}
             </select>
+            <span className="language-short" aria-hidden="true">
+              {localeShortLabels[locale]}
+            </span>
           </label>
 
           <button

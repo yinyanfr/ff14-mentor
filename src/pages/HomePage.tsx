@@ -73,7 +73,28 @@ export function HomePage() {
           <p>{t('app.tagline')}</p>
         </div>
 
-        <div className="storage-status">
+        {user && (
+          <div
+            className="hero-avatar"
+            aria-label={t('auth.signedInAs', { name: user.email })}
+          >
+            {user.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt={user.displayName ?? user.email ?? ''}
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span aria-hidden="true">
+                {(user.displayName ?? user.email ?? '?')
+                  .slice(0, 1)
+                  .toUpperCase()}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className={`storage-status${user ? ' signed-in-status' : ''}`}>
           {user ? <Cloud size={16} /> : <HardDrive size={16} />}
           <span>
             <strong>
