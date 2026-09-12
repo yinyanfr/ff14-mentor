@@ -14,6 +14,8 @@ Put unchanged static files in `public/` and reference data in `assets/`. Firebas
 - `npm run lint` checks TypeScript and React code with ESLint.
 - `npm run format` formats supported files with Prettier.
 - `npm run build` type-checks and creates the production bundle in `dist/`.
+- `npm test` runs Vitest unit and component tests.
+- `npm run test:rules:emulator` validates Firestore rules in the emulator.
 - `npm run preview` serves the production bundle locally.
 
 Run `npm run lint && npm run typecheck && npm run build` before opening a pull request. Firebase Hosting also runs the build before deployment.
@@ -26,7 +28,7 @@ Husky runs lint-staged on commit; staged JavaScript and TypeScript files receive
 
 ## Testing Guidelines
 
-No automated test framework is configured. Run lint, type-check, and build checks, then manually verify affected flows with `npm run dev`. When tests are introduced, colocate `*.test.ts` or `*.test.tsx` files beside the code under test and add the runner to `package.json`.
+Use Vitest and Testing Library. Colocate application tests as `*.test.ts` or `*.test.tsx`; keep Firebase rules tests in `tests/`. Cover search, storage, statistics, and user-visible interactions. Run Firestore rules tests through the emulator before deploying rule changes.
 
 ## Commit & Pull Request Guidelines
 

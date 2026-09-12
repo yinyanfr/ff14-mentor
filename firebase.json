@@ -17,11 +17,25 @@
     ]
   },
   "auth": {
+    "authorizedDomains": [
+      "localhost",
+      "ff14-mentor.web.app",
+      "ff14-mentor.firebaseapp.com"
+    ],
     "providers": {
       "googleSignIn": {
         "oAuthBrandDisplayName": "FF14 Mentor",
-        "supportEmail": "support@undefined.firebaseapp.com"
+        "supportEmail": "uvanianz@gmail.com"
       }
     }
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
   }
 }

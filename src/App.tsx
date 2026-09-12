@@ -1,12 +1,40 @@
+import { lazy, Suspense } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+
+import { AppLayout } from './components/AppLayout'
+import { AuthProvider } from './contexts/AuthContext'
+import { PreferencesProvider } from './contexts/PreferencesContext'
+import { RecordsProvider } from './contexts/RecordsContext'
+import { HomePage } from './pages/HomePage'
+
+const StatsPage = lazy(() =>
+  import('./pages/StatsPage').then((module) => ({ default: module.StatsPage })),
+)
+
 function App() {
   return (
-    <main className="app-shell">
-      <section className="hero">
-        <p className="eyebrow">FINAL FANTASY XIV</p>
-        <h1>指导者随机任务记录</h1>
-        <p className="description">记录每一次随机任务进入的副本。</p>
-      </section>
-    </main>
+    <PreferencesProvider>
+      <AuthProvider>
+        <RecordsProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route index element={<HomePage />} />
+              <Route
+                path="stats"
+                element={
+                  <Suspense
+                    fallback={<div className="page-loading" aria-busy="true" />}
+                  >
+                    <StatsPage />
+                  </Suspense>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </RecordsProvider>
+      </AuthProvider>
+    </PreferencesProvider>
   )
 }
 
