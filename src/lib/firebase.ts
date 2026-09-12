@@ -6,9 +6,8 @@ const firebaseConfig = {
   appId: '1:339825591268:web:8fa806b3455beea3127df1',
   storageBucket: 'ff14-mentor.firebasestorage.app',
   apiKey: 'AIzaSyBtIjMoucZOK0L4gVNuSek81lA4aWp42JY',
-  // Keep the auth helper on the same origin as Firebase Hosting so mobile
-  // browsers can restore redirect sign-in state without third-party storage.
-  authDomain: 'ff14-mentor.web.app',
+  // Popup sign-in uses Firebase's standard OAuth callback domain.
+  authDomain: 'ff14-mentor.firebaseapp.com',
   messagingSenderId: '339825591268',
   measurementId: 'G-7PKWPE9PCJ',
 }
