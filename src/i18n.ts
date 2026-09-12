@@ -28,7 +28,7 @@ const resources = {
     translation: {
       app: {
         name: '导随记录',
-        fullName: 'FF14 指导者随机任务记录',
+        fullName: 'FF14 导随行车记录仪',
         tagline: '每一次随机，都是旅途的一部分。',
       },
       nav: { home: '记录', stats: '统计' },
