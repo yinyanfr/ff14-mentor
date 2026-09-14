@@ -485,6 +485,11 @@ button:disabled {
   height: 100%;
   object-fit: contain;
 }
+.job-icon:has(img) {
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
 .job-picker-popover {
   position: absolute;
   z-index: 55;
@@ -777,10 +782,7 @@ button:disabled {
 .record-job-avatar {
   width: 46px;
   height: 46px;
-  padding: 3px;
-  border: 1px solid var(--line);
-  background: var(--surface-muted);
-  box-shadow: 0 5px 12px color-mix(in srgb, var(--text) 8%, transparent);
+  box-shadow: none;
 }
 .record-main {
   display: grid;
