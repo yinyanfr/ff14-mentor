@@ -16,14 +16,14 @@ import {
   saveLocalRecords,
   sortRecordsNewestFirst,
 } from '../lib/localRecords'
-import type { DutyRecord, RecordUpdate } from '../types'
+import type { DutyRecord, Job, RecordUpdate } from '../types'
 
 interface RecordsValue {
   records: DutyRecord[]
   loading: boolean
   syncing: boolean
   errorKey: string | null
-  addRecord: (dutyId: number) => Promise<DutyRecord>
+  addRecord: (dutyId: number, job?: Job | null) => Promise<DutyRecord>
   updateRecord: (id: string, update: RecordUpdate) => Promise<void>
   deleteRecord: (id: string) => Promise<void>
   retrySync: () => void
@@ -106,9 +106,9 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
   }, [authLoading, commitRecords, syncAttempt, user])
 
   const addRecord = useCallback(
-    async (dutyId: number) => {
+    async (dutyId: number, job: Job | null = null) => {
       if (syncing) throw new Error('Records are syncing')
-      const record = createDutyRecord(dutyId)
+      const record = createDutyRecord(dutyId, job)
       const previous = recordsRef.current
       const next = [record, ...previous].sort(sortRecordsNewestFirst)
       commitRecords(next)
@@ -141,6 +141,7 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
           ? {
               ...record,
               dutyId: update.dutyId,
+              job: update.job,
               incomplete: update.incomplete,
               note: update.note.slice(0, 500),
               updatedAt,
@@ -155,6 +156,7 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
           const cloud = await import('../lib/cloudRecords')
           await cloud.updateCloudRecord(user.uid, id, {
             dutyId: update.dutyId,
+            job: update.job,
             incomplete: update.incomplete,
             note: update.note.slice(0, 500),
           })

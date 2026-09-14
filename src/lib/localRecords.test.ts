@@ -15,10 +15,15 @@ describe('guest record storage', () => {
     vi.spyOn(globalThis.crypto, 'randomUUID').mockReturnValue(
       '11111111-1111-4111-8111-111111111111',
     )
-    const record = createDutyRecord(4, new Date('2026-09-12T08:00:00.000Z'))
+    const record = createDutyRecord(
+      4,
+      'PLD',
+      new Date('2026-09-12T08:00:00.000Z'),
+    )
     expect(record).toMatchObject({
       id: '11111111-1111-4111-8111-111111111111',
       dutyId: 4,
+      job: 'PLD',
       incomplete: false,
       occurredAt: '2026-09-12T08:00:00.000Z',
       note: '',
@@ -26,8 +31,16 @@ describe('guest record storage', () => {
   })
 
   it('persists, sorts, and clears versioned local records', () => {
-    const older = createDutyRecord(4, new Date('2026-09-10T08:00:00.000Z'))
-    const newer = createDutyRecord(2, new Date('2026-09-11T08:00:00.000Z'))
+    const older = createDutyRecord(
+      4,
+      null,
+      new Date('2026-09-10T08:00:00.000Z'),
+    )
+    const newer = createDutyRecord(
+      2,
+      null,
+      new Date('2026-09-11T08:00:00.000Z'),
+    )
     saveLocalRecords([older, newer])
     expect(loadLocalRecords().map((record) => record.dutyId)).toEqual([2, 4])
     expect(window.localStorage.getItem(localRecordStorageKey)).toContain(
@@ -60,6 +73,9 @@ describe('guest record storage', () => {
       }),
     )
 
-    expect(loadLocalRecords()[0].incomplete).toBe(false)
+    expect(loadLocalRecords()[0]).toMatchObject({
+      job: null,
+      incomplete: false,
+    })
   })
 })

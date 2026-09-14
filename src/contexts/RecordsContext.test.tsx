@@ -41,6 +41,7 @@ function record(id: string, dutyId = 4): DutyRecord {
   return {
     id,
     dutyId,
+    job: null,
     incomplete: false,
     occurredAt: timestamp,
     note: '',
@@ -72,19 +73,21 @@ describe('record storage switching and merge', () => {
 
     let created: DutyRecord | undefined
     await act(async () => {
-      created = await result.current.addRecord(4)
+      created = await result.current.addRecord(4, 'PLD')
     })
     expect(loadLocalRecords()).toHaveLength(1)
 
     await act(async () => {
       await result.current.updateRecord(created!.id, {
         dutyId: 2,
+        job: 'WHM',
         incomplete: true,
         note: 'updated',
       })
     })
     expect(loadLocalRecords()[0]).toMatchObject({
       dutyId: 2,
+      job: 'WHM',
       incomplete: true,
       note: 'updated',
     })

@@ -1,5 +1,6 @@
 import { dutyById, dutyTypes, getDutyName } from '../data/duties'
-import type { DutyRecord, DutyType, Locale } from '../types'
+import { jobs } from '../data/jobs'
+import type { DutyRecord, DutyType, Job, Locale } from '../types'
 
 export function localDateKey(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value
@@ -68,6 +69,33 @@ export function buildTypeStats(records: DutyRecord[]) {
   }
 
   return dutyTypes.map((type) => ({ type, count: initial[type] }))
+}
+
+export function buildJobStats(records: DutyRecord[]) {
+  const counts = new Map<Job | null, number>()
+  for (const record of records) {
+    counts.set(record.job, (counts.get(record.job) ?? 0) + 1)
+  }
+
+  return [...counts.entries()]
+    .map(([job, count]) => ({
+      job,
+      count,
+      percentage: records.length ? (count / records.length) * 100 : 0,
+    }))
+    .sort(
+      (left, right) =>
+        right.count - left.count ||
+        (left.job === null ? -1 : jobs.indexOf(left.job)) -
+          (right.job === null ? -1 : jobs.indexOf(right.job)),
+    )
+}
+
+export function findMostUsedJobs<T extends { count: number }>(stats: T[]) {
+  const highestCount = stats[0]?.count
+  return highestCount === undefined
+    ? []
+    : stats.filter((item) => item.count === highestCount)
 }
 
 export function buildDailyStats(

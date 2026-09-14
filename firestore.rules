@@ -9,6 +9,7 @@ service cloud.firestore {
     function validRecord(data) {
       return data.keys().hasOnly([
           'dutyId',
+          'job',
           'incomplete',
           'occurredAt',
           'note',
@@ -17,6 +18,15 @@ service cloud.firestore {
         ])
         && data.dutyId is int
         && data.dutyId > 0
+        && (!data.keys().hasAny(['job'])
+          || (data.job is string
+            && data.job in [
+              'PLD', 'WAR', 'DRK', 'GNB',
+              'WHM', 'SCH', 'AST', 'SGE',
+              'MNK', 'DRG', 'NIN', 'SAM', 'RPR', 'VPR',
+              'BRD', 'MCH', 'DNC',
+              'BLM', 'SMN', 'RDM', 'PCT'
+            ]))
         && data.incomplete is bool
         && data.occurredAt is timestamp
         && data.note is string

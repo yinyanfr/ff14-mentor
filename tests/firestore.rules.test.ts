@@ -26,6 +26,7 @@ function validRecord() {
   const now = new Date('2026-09-12T08:00:00.000Z')
   return {
     dutyId: 4,
+    job: 'PLD',
     incomplete: false,
     occurredAt: now,
     note: '',
@@ -54,6 +55,7 @@ describe('Firestore record ownership rules', () => {
     await assertSucceeds(
       updateDoc(recordRef, {
         dutyId: 2,
+        job: 'WHM',
         incomplete: true,
         note: 'updated',
         updatedAt: new Date(),
@@ -96,6 +98,21 @@ describe('Firestore record ownership rules', () => {
         ...validRecord(),
         incomplete: 'no',
       }),
+    )
+    await assertFails(
+      setDoc(doc(db, 'users/alice/records/bad-job'), {
+        ...validRecord(),
+        job: 'GLA',
+      }),
+    )
+  })
+
+  it('accepts a missing job for records created by older clients', async () => {
+    const db = environment.authenticatedContext('alice').firestore()
+    const { job: _job, ...legacyRecord } = validRecord()
+    void _job
+    await assertSucceeds(
+      setDoc(doc(db, 'users/alice/records/legacy'), legacyRecord),
     )
   })
 

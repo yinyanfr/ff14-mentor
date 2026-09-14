@@ -1,8 +1,10 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
+import { JobIcon } from './JobIcon'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { dutyById, getDutyName } from '../data/duties'
+import { getJobName } from '../data/jobs'
 import type { DutyRecord } from '../types'
 
 interface RecordListProps {
@@ -36,6 +38,7 @@ export function RecordList({
         const name = duty ? getDutyName(duty, locale) : t('record.unknownDuty')
         return (
           <li key={record.id} className="record-item">
+            <JobIcon job={record.job} className="record-job-avatar" />
             <div className="record-main">
               <div className="record-heading">
                 <strong>{name}</strong>
@@ -44,6 +47,9 @@ export function RecordList({
                     {t(`dutyTypes.${duty.type}`)}
                   </span>
                 )}
+                <span className="job-chip">
+                  {record.job ? getJobName(record.job, locale) : t('jobs.none')}
+                </span>
                 {record.incomplete && (
                   <span className="incomplete-chip">
                     {t('record.incomplete')}

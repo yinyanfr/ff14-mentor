@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DutySearch } from './DutySearch'
+import { JobSelect } from './JobSelect'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { dutyById, getDutyName } from '../data/duties'
 import type { Duty, DutyRecord, RecordUpdate } from '../types'
@@ -24,6 +25,7 @@ export function EditRecordDialog({
     dutyById.get(record.dutyId),
   )
   const [incomplete, setIncomplete] = useState(record.incomplete)
+  const [job, setJob] = useState(record.job)
   const [note, setNote] = useState(record.note)
   const [saving, setSaving] = useState(false)
 
@@ -34,6 +36,7 @@ export function EditRecordDialog({
     try {
       await onSave({
         dutyId: duty.content_finder_condition_id,
+        job,
         incomplete,
         note: note.trim(),
       })
@@ -77,6 +80,7 @@ export function EditRecordDialog({
             disabled={saving}
             label={t('record.changeDuty')}
           />
+          <JobSelect value={job} onChange={setJob} disabled={saving} />
           <label className="completion-option">
             <input
               type="checkbox"

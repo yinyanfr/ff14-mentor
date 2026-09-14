@@ -2,6 +2,7 @@ import {
   Timestamp,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getFirestore,
   onSnapshot,
@@ -15,6 +16,7 @@ import {
 } from 'firebase/firestore'
 
 import { firebaseApp } from './firebase'
+import { isJob } from '../data/jobs'
 import type { DutyRecord, RecordUpdate } from '../types'
 
 const db = getFirestore(firebaseApp)
@@ -22,6 +24,7 @@ const db = getFirestore(firebaseApp)
 function toFirestoreRecord(record: DutyRecord) {
   return {
     dutyId: record.dutyId,
+    ...(record.job ? { job: record.job } : {}),
     incomplete: record.incomplete,
     occurredAt: Timestamp.fromDate(new Date(record.occurredAt)),
     note: record.note,
@@ -37,6 +40,7 @@ function fromFirestoreRecord(
   return {
     id: snapshot.id,
     dutyId: data.dutyId as number,
+    job: isJob(data.job) ? data.job : null,
     incomplete: data.incomplete === true,
     occurredAt: (data.occurredAt as Timestamp).toDate().toISOString(),
     note: data.note as string,
@@ -94,6 +98,7 @@ export async function updateCloudRecord(
 ) {
   await updateDoc(doc(db, 'users', uid, 'records', id), {
     dutyId: update.dutyId,
+    job: update.job ?? deleteField(),
     incomplete: update.incomplete,
     note: update.note,
     updatedAt: Timestamp.now(),

@@ -405,6 +405,153 @@ button:disabled {
   width: min(100%, 46rem);
   margin-top: clamp(2rem, 6vw, 4.5rem);
 }
+.record-entry-fields {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.42fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
+}
+.job-field {
+  position: relative;
+  min-width: 0;
+}
+.job-field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+.job-select-trigger {
+  display: grid;
+  width: 100%;
+  height: 58px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-soft);
+  text-align: left;
+  cursor: pointer;
+}
+.job-select-trigger:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 14%, transparent),
+    var(--shadow-soft);
+}
+.job-select-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.job-select-trigger > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+}
+.job-select-trigger strong,
+.job-select-trigger small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-select-trigger strong {
+  font-size: 0.78rem;
+}
+.job-select-trigger small {
+  color: var(--text-faint);
+  font-size: 0.6rem;
+}
+.job-select-trigger > svg {
+  color: var(--text-faint);
+}
+.job-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--text-faint);
+  background: var(--surface-muted);
+}
+.job-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.job-picker-popover {
+  position: absolute;
+  z-index: 55;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: min(32rem, calc(100vw - 4.5rem));
+  max-height: min(31rem, 62vh);
+  overflow: auto;
+  padding: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-solid);
+  box-shadow: var(--shadow);
+}
+.job-option-group + .job-option-group {
+  margin-top: 0.55rem;
+}
+.job-option-group h3 {
+  margin: 0.45rem 0.4rem 0.35rem;
+  color: var(--text-faint);
+  font-size: 0.61rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.job-option-group > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+.job-option {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.38rem;
+  border: 0;
+  border-radius: 11px;
+  color: var(--text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.job-option:hover,
+.job-option:focus-visible,
+.job-option.selected {
+  outline: none;
+  background: var(--primary-soft);
+}
+.job-option > span:last-child {
+  display: grid;
+  min-width: 0;
+}
+.job-option strong,
+.job-option small,
+.job-option > span:last-child:not(:has(strong)) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-option strong {
+  font-size: 0.73rem;
+}
+.job-option small {
+  color: var(--text-faint);
+  font-size: 0.58rem;
+}
 .duty-search {
   position: relative;
 }
@@ -627,6 +774,14 @@ button:disabled {
   border-radius: 15px;
   background: color-mix(in srgb, var(--surface-solid) 74%, transparent);
 }
+.record-job-avatar {
+  width: 46px;
+  height: 46px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--text) 8%, transparent);
+}
 .record-main {
   display: grid;
   flex: 1;
@@ -651,6 +806,15 @@ button:disabled {
   border-radius: 999px;
   color: var(--primary-strong);
   background: var(--primary-soft);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+.job-chip {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.42rem;
+  border-radius: 999px;
+  color: var(--text-soft);
+  background: var(--surface-muted);
   font-size: 0.6rem;
   font-weight: 700;
 }
@@ -942,6 +1106,31 @@ button:disabled {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.favorite-job-list {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.favorite-job-item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.42rem 0.18rem 0.22rem;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+.favorite-job-item b {
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.favorite-job-icon {
+  width: 24px;
+  height: 24px;
+}
 .summary-card em {
   grid-column: 2;
   color: var(--text-faint);
@@ -952,6 +1141,9 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+.job-stats-card {
+  grid-column: 1 / -1;
 }
 .chart-card,
 .ranking-table-card {
@@ -1170,6 +1362,19 @@ td small {
   .search-card {
     margin-top: 2rem;
   }
+  .record-entry-fields {
+    grid-template-columns: 1fr;
+  }
+  .job-select-trigger {
+    height: 54px;
+  }
+  .job-picker-popover {
+    width: 100%;
+    max-height: 52vh;
+  }
+  .job-option-group > div {
+    grid-template-columns: 1fr;
+  }
   .search-input-wrap input {
     height: 54px;
   }
@@ -1181,6 +1386,10 @@ td small {
   }
   .record-item {
     align-items: start;
+  }
+  .record-job-avatar {
+    width: 42px;
+    height: 42px;
   }
   .record-heading {
     display: grid;

@@ -16,9 +16,18 @@ import {
   YAxis,
 } from 'recharts'
 
+import { JobIcon } from '../components/JobIcon'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { useRecords } from '../contexts/RecordsContext'
-import { buildDailyStats, buildDutyStats, buildTypeStats } from '../lib/stats'
+import { getJobName, jobRoleByJob } from '../data/jobs'
+import {
+  buildDailyStats,
+  buildDutyStats,
+  buildJobStats,
+  buildTypeStats,
+  findMostUsedJobs,
+} from '../lib/stats'
+import type { JobRole } from '../types'
 
 const chartColors = [
   '#7066e8',
@@ -29,6 +38,14 @@ const chartColors = [
   '#9c6bd6',
   '#78909c',
 ]
+
+const jobRoleColors: Record<JobRole, string> = {
+  tank: '#5596d8',
+  healer: '#57a96b',
+  melee: '#dc6a6a',
+  physicalRanged: '#e3a44b',
+  caster: '#9c6bd6',
+}
 
 export function StatsPage() {
   const { t } = useTranslation()
@@ -56,7 +73,16 @@ export function StatsPage() {
       })),
     [locale, records],
   )
-  const favorite = dutyStats[0]
+  const jobStats = useMemo(
+    () =>
+      buildJobStats(records).map((item) => ({
+        ...item,
+        name: item.job ? getJobName(item.job, locale) : t('jobs.none'),
+      })),
+    [locale, records, t],
+  )
+  const favoriteJobs = findMostUsedJobs(jobStats)
+  const favoriteJobCount = favoriteJobs[0]?.count ?? 0
 
   if (loading) {
     return (
@@ -101,9 +127,16 @@ export function StatsPage() {
                 <Award size={19} />
               </span>
               <small>{t('stats.favorite')}</small>
-              <strong>{favorite?.name}</strong>
+              <div className="favorite-job-list">
+                {favoriteJobs.map((item) => (
+                  <span className="favorite-job-item" key={item.job ?? 'none'}>
+                    <JobIcon job={item.job} className="favorite-job-icon" />
+                    <b>{item.name}</b>
+                  </span>
+                ))}
+              </div>
               <em>
-                {favorite?.count.toLocaleString(locale)} {t('home.totalUnit')}
+                {favoriteJobCount.toLocaleString(locale)} {t('home.totalUnit')}
               </em>
             </article>
           </section>
@@ -190,6 +223,56 @@ export function StatsPage() {
                       activeDot={{ r: 5 }}
                     />
                   </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
+
+            <article className="chart-card job-stats-card">
+              <h2>{t('stats.jobs')}</h2>
+              <div
+                className="chart-wrap job-chart"
+                style={{ height: Math.max(240, jobStats.length * 38) }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={jobStats}
+                    layout="vertical"
+                    margin={{ top: 4, right: 18, left: 8, bottom: 4 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      allowDecimals={false}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={110}
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <Tooltip
+                      formatter={(value) => [
+                        Number(value).toLocaleString(locale),
+                        t('stats.count'),
+                      ]}
+                    />
+                    <Bar dataKey="count" radius={[0, 7, 7, 0]}>
+                      {jobStats.map((item) => (
+                        <Cell
+                          key={item.job ?? 'none'}
+                          fill={
+                            item.job
+                              ? jobRoleColors[jobRoleByJob[item.job]]
+                              : '#78909c'
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
             </article>

@@ -4,9 +4,11 @@ import type { DutyRecord } from '../types'
 import {
   buildDailyStats,
   buildDutyStats,
+  buildJobStats,
   buildTypeStats,
   calculateMentorProgress,
   countCompletedRecords,
+  findMostUsedJobs,
   splitHomeRecords,
 } from './stats'
 
@@ -15,10 +17,12 @@ function record(
   dutyId: number,
   occurredAt: string,
   incomplete = false,
+  job: DutyRecord['job'] = null,
 ): DutyRecord {
   return {
     id,
     dutyId,
+    job,
     incomplete,
     occurredAt,
     note: '',
@@ -58,6 +62,35 @@ describe('record statistics', () => {
     const daily = buildDailyStats(records, new Date('2026-09-12T12:00:00.000Z'))
     expect(daily).toHaveLength(30)
     expect(daily.at(-1)?.count).toBe(2)
+  })
+
+  it('groups records by job and treats legacy records as no job', () => {
+    const withJobs = [
+      { ...records[0], job: 'PLD' as const },
+      { ...records[1], job: 'PLD' as const },
+      records[2],
+    ]
+    const result = buildJobStats(withJobs)
+    expect(result.map(({ job, count }) => ({ job, count }))).toEqual([
+      { job: 'PLD', count: 2 },
+      { job: null, count: 1 },
+    ])
+    expect(result[0].percentage).toBeCloseTo(66.67, 1)
+    expect(result[1].percentage).toBeCloseTo(33.33, 1)
+  })
+
+  it('returns every job tied for the highest usage count', () => {
+    expect(
+      findMostUsedJobs([
+        { job: 'PLD', count: 3 },
+        { job: 'WHM', count: 3 },
+        { job: null, count: 1 },
+      ]),
+    ).toEqual([
+      { job: 'PLD', count: 3 },
+      { job: 'WHM', count: 3 },
+    ])
+    expect(findMostUsedJobs([])).toEqual([])
   })
 
   it('caps the 2,000-run progress bar without capping the record count', () => {

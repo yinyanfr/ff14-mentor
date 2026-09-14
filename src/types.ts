@@ -2,6 +2,31 @@ export type Locale = 'zh-CN' | 'zh-TW' | 'ja' | 'en' | 'de' | 'fr' | 'ko'
 
 export type DutyLocale = 'zh_cn' | 'zh_tw' | 'ja' | 'en' | 'de' | 'fr' | 'ko'
 
+export type Job =
+  | 'PLD'
+  | 'WAR'
+  | 'DRK'
+  | 'GNB'
+  | 'WHM'
+  | 'SCH'
+  | 'AST'
+  | 'SGE'
+  | 'MNK'
+  | 'DRG'
+  | 'NIN'
+  | 'SAM'
+  | 'RPR'
+  | 'VPR'
+  | 'BRD'
+  | 'MCH'
+  | 'DNC'
+  | 'BLM'
+  | 'SMN'
+  | 'RDM'
+  | 'PCT'
+
+export type JobRole = 'tank' | 'healer' | 'melee' | 'physicalRanged' | 'caster'
+
 export type DutyType =
   | 'leveling_dungeon'
   | 'level_cap_dungeon'
@@ -39,6 +64,7 @@ export interface DutyDataset {
 export interface DutyRecord {
   id: string
   dutyId: number
+  job: Job | null
   incomplete: boolean
   occurredAt: string
   note: string
@@ -48,6 +74,7 @@ export interface DutyRecord {
 
 export interface RecordUpdate {
   dutyId: number
+  job: Job | null
   incomplete: boolean
   note: string
 }

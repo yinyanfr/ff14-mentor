@@ -1,4 +1,5 @@
 import type { DutyRecord } from '../types'
+import { isJob } from '../data/jobs'
 
 const STORAGE_KEY = 'ff14-mentor:records:v1'
 
@@ -17,12 +18,15 @@ function normalizeRecord(value: unknown): DutyRecord | null {
     typeof record.note === 'string' &&
     typeof record.createdAt === 'string' &&
     typeof record.updatedAt === 'string' &&
-    (record.incomplete === undefined || typeof record.incomplete === 'boolean')
+    (record.incomplete === undefined ||
+      typeof record.incomplete === 'boolean') &&
+    (record.job === undefined || record.job === null || isJob(record.job))
 
   if (!isValid) return null
   return {
     id: record.id as string,
     dutyId: record.dutyId as number,
+    job: isJob(record.job) ? record.job : null,
     incomplete: record.incomplete === true,
     occurredAt: record.occurredAt as string,
     note: record.note as string,
@@ -59,11 +63,16 @@ export function sortRecordsNewestFirst(left: DutyRecord, right: DutyRecord) {
   return Date.parse(right.occurredAt) - Date.parse(left.occurredAt)
 }
 
-export function createDutyRecord(dutyId: number, now = new Date()): DutyRecord {
+export function createDutyRecord(
+  dutyId: number,
+  job: DutyRecord['job'] = null,
+  now = new Date(),
+): DutyRecord {
   const timestamp = now.toISOString()
   return {
     id: crypto.randomUUID(),
     dutyId,
+    job,
     incomplete: false,
     occurredAt: timestamp,
     note: '',

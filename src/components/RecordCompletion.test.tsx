@@ -11,6 +11,7 @@ import type { DutyRecord } from '../types'
 const record: DutyRecord = {
   id: 'one',
   dutyId: 4,
+  job: 'PLD',
   incomplete: true,
   occurredAt: '2026-09-12T08:00:00.000Z',
   note: '',
@@ -22,7 +23,7 @@ describe('incomplete records', () => {
   beforeEach(async () => i18n.changeLanguage('zh-CN'))
 
   it('shows an incomplete tag in record lists', () => {
-    render(
+    const { container } = render(
       <PreferencesProvider>
         <RecordList
           records={[record]}
@@ -34,6 +35,10 @@ describe('incomplete records', () => {
     )
 
     expect(screen.getByText('未完成')).toBeInTheDocument()
+    expect(container.querySelector('.record-job-avatar img')).toHaveAttribute(
+      'src',
+      '/assets/job-icons/Paladin.png',
+    )
   })
 
   it('allows the incomplete state to be changed while editing', async () => {
@@ -51,10 +56,13 @@ describe('incomplete records', () => {
     )
 
     await user.click(screen.getByRole('checkbox', { name: /未完成/ }))
+    await user.click(screen.getByRole('button', { name: /职业: 骑士/ }))
+    await user.click(screen.getByRole('option', { name: /白魔法师/ }))
     await user.click(screen.getByRole('button', { name: '保存修改' }))
 
     expect(onSave).toHaveBeenCalledWith({
       dutyId: 4,
+      job: 'WHM',
       incomplete: true,
       note: '',
     })

@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog'
 import { DutySearch } from '../components/DutySearch'
 import { EditRecordDialog } from '../components/EditRecordDialog'
+import { JobSelect } from '../components/JobSelect'
 import { RecordList } from '../components/RecordList'
 import { useAuth } from '../contexts/AuthContext'
 import { usePreferences } from '../contexts/PreferencesContext'
@@ -21,7 +22,7 @@ import {
   countCompletedRecords,
   splitHomeRecords,
 } from '../lib/stats'
-import type { DutyRecord } from '../types'
+import type { DutyRecord, Job } from '../types'
 
 export function HomePage() {
   const { t } = useTranslation()
@@ -40,6 +41,7 @@ export function HomePage() {
   } = useRecords()
   const [editingRecord, setEditingRecord] = useState<DutyRecord | null>(null)
   const [deletingRecord, setDeletingRecord] = useState<DutyRecord | null>(null)
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const { today, recent } = useMemo(() => splitHomeRecords(records), [records])
   const completedCount = useMemo(
@@ -109,13 +111,20 @@ export function HomePage() {
         </div>
 
         <div className="search-card">
-          <DutySearch
-            disabled={loading || syncing}
-            onSelect={async (duty) => {
-              await addRecord(duty.content_finder_condition_id)
-              setToast(t('home.added', { duty: getDutyName(duty, locale) }))
-            }}
-          />
+          <div className="record-entry-fields">
+            <JobSelect
+              value={selectedJob}
+              onChange={setSelectedJob}
+              disabled={loading || syncing}
+            />
+            <DutySearch
+              disabled={loading || syncing}
+              onSelect={async (duty) => {
+                await addRecord(duty.content_finder_condition_id, selectedJob)
+                setToast(t('home.added', { duty: getDutyName(duty, locale) }))
+              }}
+            />
+          </div>
           <p className="search-hint">{t('home.searchHint')}</p>
         </div>
       </section>
