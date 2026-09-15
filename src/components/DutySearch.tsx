@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { getDutyName, searchDuties } from '../data/duties'
 import { usePreferences } from '../contexts/PreferencesContext'
 import type { Duty } from '../types'
+import { DutyTags } from './DutyTags'
 
 interface DutySearchProps {
   onSelect: (duty: Duty) => void | Promise<void>
@@ -12,6 +13,8 @@ interface DutySearchProps {
   label?: string
   placeholder?: string
   autoFocus?: boolean
+  selectedDuty?: Duty | null
+  onClearSelection?: () => void
 }
 
 export function DutySearch({
@@ -20,6 +23,8 @@ export function DutySearch({
   label,
   placeholder,
   autoFocus = false,
+  selectedDuty,
+  onClearSelection,
 }: DutySearchProps) {
   const { t } = useTranslation()
   const { locale } = usePreferences()
@@ -30,12 +35,16 @@ export function DutySearch({
   const wrapperRef = useRef<HTMLDivElement>(null)
   const results = useMemo(() => searchDuties(query, locale), [locale, query])
   const showResults = focused && query.trim().length > 0
+  const isControlled = selectedDuty !== undefined
+  const inputValue =
+    isControlled && selectedDuty ? getDutyName(selectedDuty, locale) : query
 
   async function selectDuty(duty: Duty) {
     try {
       await onSelect(duty)
       setQuery('')
       setActiveIndex(0)
+      if (isControlled) setFocused(false)
     } catch {
       // Keep the query available when persistence fails so the user can retry.
     }
@@ -55,7 +64,7 @@ export function DutySearch({
           autoComplete="off"
           autoFocus={autoFocus}
           disabled={disabled}
-          value={query}
+          value={inputValue}
           placeholder={placeholder ?? t('home.searchPlaceholder')}
           aria-expanded={showResults}
           aria-controls={listId}
@@ -73,6 +82,9 @@ export function DutySearch({
             })
           }}
           onChange={(event) => {
+            if (selectedDuty) {
+              onClearSelection?.()
+            }
             setQuery(event.target.value)
             setActiveIndex(0)
           }}
@@ -124,7 +136,10 @@ export function DutySearch({
               >
                 <span>
                   <strong>{getDutyName(duty, locale)}</strong>
-                  <small>{t(`dutyTypes.${duty.type}`)}</small>
+                  <small className="search-result-description">
+                    <span>{t(`dutyTypes.${duty.type}`)}</span>
+                    <DutyTags dutyId={duty.content_finder_condition_id} />
+                  </small>
                 </span>
                 <span className="duty-meta">
                   {t('duty.level', { level: duty.level.required })} ·{' '}

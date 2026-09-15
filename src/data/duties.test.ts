@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   duties,
   getDutyName,
+  getDutyTags,
   normalizeSearchText,
   searchDuties,
 } from './duties'
@@ -40,5 +41,20 @@ describe('duty data and search', () => {
     expect(missingKorean && getDutyName(missingKorean, 'ko')).toBe(
       missingKorean?.names.en,
     )
+  })
+
+  it('assigns special tags only to the main scenario and Crystal Tower duties', () => {
+    expect([15, 16, 830].map(getDutyTags)).toEqual([
+      ['mainScenario'],
+      ['mainScenario'],
+      ['mainScenario'],
+    ])
+    expect([92, 102, 111].map(getDutyTags)).toEqual([
+      ['crystalTower'],
+      ['crystalTower'],
+      ['crystalTower'],
+    ])
+    expect(getDutyTags(4)).toEqual([])
+    expect(getDutyTags(68)).toEqual([])
   })
 })

@@ -2,6 +2,8 @@ import rawDutyData from '../../assets/ff14_mentor_roulette_duties_7.56.json'
 
 import type { Duty, DutyDataset, DutyLocale, DutyType, Locale } from '../types'
 
+export type DutyTag = 'mainScenario' | 'crystalTower'
+
 const dataset = rawDutyData as DutyDataset
 
 export const duties = [...dataset.duties].sort(
@@ -13,6 +15,15 @@ export const dutyDataVersion = dataset.meta.game_data_snapshot
 export const dutyById = new Map(
   duties.map((duty) => [duty.content_finder_condition_id, duty]),
 )
+
+const dutyTagsById = new Map<number, readonly DutyTag[]>([
+  [15, ['mainScenario']],
+  [16, ['mainScenario']],
+  [830, ['mainScenario']],
+  [92, ['crystalTower']],
+  [102, ['crystalTower']],
+  [111, ['crystalTower']],
+])
 
 export const dutyTypes: DutyType[] = [
   'leveling_dungeon',
@@ -38,6 +49,10 @@ export function getDutyName(duty: Duty, locale: Locale) {
   const key = localeKeys[locale]
   const fallbackKey: DutyLocale = locale === 'zh-TW' ? 'zh_cn' : 'en'
   return duty.names[key] ?? duty.names[fallbackKey] ?? duty.names.zh_cn ?? ''
+}
+
+export function getDutyTags(dutyId: number): readonly DutyTag[] {
+  return dutyTagsById.get(dutyId) ?? []
 }
 
 export function normalizeSearchText(value: string) {

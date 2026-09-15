@@ -2,6 +2,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { JobIcon } from './JobIcon'
+import { DutyTags } from './DutyTags'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { dutyById, getDutyName } from '../data/duties'
 import { getJobName } from '../data/jobs'
@@ -47,6 +48,7 @@ export function RecordList({
                     {t(`dutyTypes.${duty.type}`)}
                   </span>
                 )}
+                <DutyTags dutyId={record.dutyId} />
                 <span className="job-chip">
                   {record.job ? getJobName(record.job, locale) : t('jobs.none')}
                 </span>

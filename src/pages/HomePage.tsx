@@ -1,10 +1,4 @@
-import {
-  CalendarDays,
-  Cloud,
-  HardDrive,
-  LoaderCircle,
-  Target,
-} from 'lucide-react'
+import { CalendarDays, LoaderCircle, Target } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -13,7 +7,6 @@ import { DutySearch } from '../components/DutySearch'
 import { EditRecordDialog } from '../components/EditRecordDialog'
 import { JobSelect } from '../components/JobSelect'
 import { RecordList } from '../components/RecordList'
-import { useAuth } from '../contexts/AuthContext'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { useRecords } from '../contexts/RecordsContext'
 import { dutyById, getDutyName } from '../data/duties'
@@ -22,12 +15,11 @@ import {
   countCompletedRecords,
   splitHomeRecords,
 } from '../lib/stats'
-import type { DutyRecord, Job } from '../types'
+import type { Duty, DutyRecord, Job } from '../types'
 
 export function HomePage() {
   const { t } = useTranslation()
   const { locale } = usePreferences()
-  const { user } = useAuth()
   const {
     records,
     loading,
@@ -42,6 +34,8 @@ export function HomePage() {
   const [editingRecord, setEditingRecord] = useState<DutyRecord | null>(null)
   const [deletingRecord, setDeletingRecord] = useState<DutyRecord | null>(null)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [selectedDuty, setSelectedDuty] = useState<Duty | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const { today, recent } = useMemo(() => splitHomeRecords(records), [records])
   const completedCount = useMemo(
@@ -65,6 +59,21 @@ export function HomePage() {
   const deletingDuty = deletingRecord
     ? dutyById.get(deletingRecord.dutyId)
     : undefined
+  const formDisabled = loading || syncing || submitting
+
+  async function submitRecord(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedDuty || formDisabled) return
+
+    setSubmitting(true)
+    try {
+      await addRecord(selectedDuty.content_finder_condition_id, selectedJob)
+      setToast(t('home.added', { duty: getDutyName(selectedDuty, locale) }))
+      setSelectedDuty(null)
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="home-page page-stack">
@@ -75,58 +84,33 @@ export function HomePage() {
           <p>{t('app.tagline')}</p>
         </div>
 
-        {user && (
-          <div
-            className="hero-avatar"
-            aria-label={t('auth.signedInAs', { name: user.email })}
-          >
-            {user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt={user.displayName ?? user.email ?? ''}
-                referrerPolicy="no-referrer"
+        <form
+          className="search-card record-form"
+          aria-busy={submitting}
+          onSubmit={(event) => void submitRecord(event)}
+        >
+          <fieldset className="record-form-fieldset" disabled={formDisabled}>
+            <div className="record-entry-fields">
+              <JobSelect value={selectedJob} onChange={setSelectedJob} />
+              <DutySearch
+                selectedDuty={selectedDuty}
+                onClearSelection={() => setSelectedDuty(null)}
+                onSelect={setSelectedDuty}
               />
-            ) : (
-              <span aria-hidden="true">
-                {(user.displayName ?? user.email ?? '?')
-                  .slice(0, 1)
-                  .toUpperCase()}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className={`storage-status${user ? ' signed-in-status' : ''}`}>
-          {user ? <Cloud size={16} /> : <HardDrive size={16} />}
-          <span>
-            <strong>
-              {user ? (user.displayName ?? user.email) : t('auth.guest')}
-            </strong>
-            <small>
-              {user
-                ? t('auth.signedInAs', { name: user.email })
-                : t('auth.guestHint')}
-            </small>
-          </span>
-        </div>
-
-        <div className="search-card">
-          <div className="record-entry-fields">
-            <JobSelect
-              value={selectedJob}
-              onChange={setSelectedJob}
-              disabled={loading || syncing}
-            />
-            <DutySearch
-              disabled={loading || syncing}
-              onSelect={async (duty) => {
-                await addRecord(duty.content_finder_condition_id, selectedJob)
-                setToast(t('home.added', { duty: getDutyName(duty, locale) }))
-              }}
-            />
-          </div>
-          <p className="search-hint">{t('home.searchHint')}</p>
-        </div>
+            </div>
+            <div className="record-form-footer">
+              <p className="search-hint">{t('home.searchHint')}</p>
+              <button
+                className="record-submit-button"
+                type="submit"
+                disabled={!selectedDuty || formDisabled}
+              >
+                {submitting && <LoaderCircle className="spin" size={18} />}
+                {t(submitting ? 'home.submitting' : 'home.submitRecord')}
+              </button>
+            </div>
+          </fieldset>
+        </form>
       </section>
 
       {syncing && (

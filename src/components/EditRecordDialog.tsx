@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DutySearch } from './DutySearch'
+import { DutyTags } from './DutyTags'
 import { JobSelect } from './JobSelect'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { dutyById, getDutyName } from '../data/duties'
@@ -73,7 +74,12 @@ export function EditRecordDialog({
         </header>
         <form onSubmit={submit}>
           {duty && (
-            <div className="selected-duty">{getDutyName(duty, locale)}</div>
+            <div className="selected-duty">
+              <span>{getDutyName(duty, locale)}</span>
+              <span className="selected-duty-tags">
+                <DutyTags dutyId={duty.content_finder_condition_id} />
+              </span>
+            </div>
           )}
           <DutySearch
             onSelect={setDuty}

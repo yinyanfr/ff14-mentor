@@ -7,9 +7,11 @@ import {
   Sparkles,
   Sun,
 } from 'lucide-react'
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
+import { AuthDialog } from './AuthDialog'
 import { useAuth } from '../contexts/AuthContext'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { localeLabels, supportedLocales } from '../i18n'
@@ -33,7 +35,8 @@ const localeShortLabels: Record<Locale, string> = {
 export function AppLayout() {
   const { t } = useTranslation()
   const { locale, setLocale, theme, toggleTheme } = usePreferences()
-  const { user, loading, busy, errorKey, login, logout, clearError } = useAuth()
+  const { user, loading, busy, errorKey, logout, clearError } = useAuth()
+  const [authOpen, setAuthOpen] = useState(false)
 
   return (
     <div className="app-shell">
@@ -125,7 +128,10 @@ export function AppLayout() {
             <button
               className="sign-in-button"
               type="button"
-              onClick={() => void login()}
+              onClick={() => {
+                clearError()
+                setAuthOpen(true)
+              }}
               disabled={loading || busy}
             >
               <LogIn size={17} />
@@ -135,7 +141,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      {errorKey && (
+      {errorKey && !authOpen && (
         <div className="global-banner error-banner" role="alert">
           <span>{t(errorKey)}</span>
           <button
@@ -151,6 +157,8 @@ export function AppLayout() {
       <main className="page-container">
         <Outlet />
       </main>
+
+      {authOpen && <AuthDialog onClose={() => setAuthOpen(false)} />}
 
       <nav className="mobile-nav" aria-label="Primary">
         {navItems.map(({ to, key, icon: Icon, end }) => (

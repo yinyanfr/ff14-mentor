@@ -17,6 +17,7 @@ import {
 } from 'recharts'
 
 import { JobIcon } from '../components/JobIcon'
+import { DutyTags } from '../components/DutyTags'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { useRecords } from '../contexts/RecordsContext'
 import { getJobName, jobRoleByJob } from '../data/jobs'
@@ -332,7 +333,10 @@ export function StatsPage() {
                       <td>{index + 1}</td>
                       <td>
                         <strong>{item.name}</strong>
-                        <small>{t(`dutyTypes.${item.type}`)}</small>
+                        <small className="ranking-duty-meta">
+                          <span>{t(`dutyTypes.${item.type}`)}</span>
+                          <DutyTags dutyId={item.dutyId} />
+                        </small>
                       </td>
                       <td>{item.count.toLocaleString(locale)}</td>
                       <td>

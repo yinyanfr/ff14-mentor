@@ -1,6 +1,8 @@
 import {
+  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
   type User,
@@ -21,12 +23,41 @@ interface AuthValue {
   loading: boolean
   busy: boolean
   errorKey: string | null
-  login: () => Promise<void>
+  loginWithGoogle: () => Promise<boolean>
+  loginWithEmail: (email: string, password: string) => Promise<boolean>
+  registerWithEmail: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   clearError: () => void
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
+
+function getAuthErrorKey(error: unknown, fallbackKey: string) {
+  const code =
+    typeof error === 'object' && error && 'code' in error
+      ? String(error.code)
+      : ''
+
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'auth.invalidCredentials'
+    case 'auth/email-already-in-use':
+      return 'auth.emailInUse'
+    case 'auth/weak-password':
+      return 'auth.weakPassword'
+    case 'auth/invalid-email':
+      return 'auth.invalidEmail'
+    case 'auth/too-many-requests':
+      return 'auth.tooManyRequests'
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return null
+    default:
+      return fallbackKey
+  }
+}
 
 export function AuthProvider({ children }: React.PropsWithChildren) {
   const [user, setUser] = useState<User | null>(null)
@@ -53,20 +84,49 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     }
   }, [])
 
-  const login = useCallback(async () => {
-    setBusy(true)
-    setErrorKey(null)
+  const runAuth = useCallback(
+    async (operation: () => Promise<unknown>, fallbackKey: string) => {
+      setBusy(true)
+      setErrorKey(null)
+
+      try {
+        await authPersistenceReady
+        await operation()
+        return true
+      } catch (error) {
+        setErrorKey(getAuthErrorKey(error, fallbackKey))
+        return false
+      } finally {
+        setBusy(false)
+      }
+    },
+    [],
+  )
+
+  const loginWithGoogle = useCallback(async () => {
     const provider = new GoogleAuthProvider()
     provider.setCustomParameters({ prompt: 'select_account' })
 
-    try {
-      await authPersistenceReady
-      await signInWithPopup(auth, provider)
-    } catch {
-      setErrorKey('auth.signInFailed')
-      setBusy(false)
-    }
-  }, [])
+    return runAuth(() => signInWithPopup(auth, provider), 'auth.signInFailed')
+  }, [runAuth])
+
+  const loginWithEmail = useCallback(
+    (email: string, password: string) =>
+      runAuth(
+        () => signInWithEmailAndPassword(auth, email.trim(), password),
+        'auth.emailSignInFailed',
+      ),
+    [runAuth],
+  )
+
+  const registerWithEmail = useCallback(
+    (email: string, password: string) =>
+      runAuth(
+        () => createUserWithEmailAndPassword(auth, email.trim(), password),
+        'auth.emailSignInFailed',
+      ),
+    [runAuth],
+  )
 
   const logout = useCallback(async () => {
     setBusy(true)
@@ -84,11 +144,22 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
       loading,
       busy,
       errorKey,
-      login,
+      loginWithGoogle,
+      loginWithEmail,
+      registerWithEmail,
       logout,
       clearError: () => setErrorKey(null),
     }),
-    [busy, errorKey, loading, login, logout, user],
+    [
+      busy,
+      errorKey,
+      loading,
+      loginWithEmail,
+      loginWithGoogle,
+      logout,
+      registerWithEmail,
+      user,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
