@@ -28,6 +28,7 @@ function validRecord() {
     dutyId: 4,
     job: 'PLD',
     incomplete: false,
+    joinedInProgress: false,
     occurredAt: now,
     note: '',
     createdAt: now,
@@ -57,6 +58,7 @@ describe('Firestore record ownership rules', () => {
         dutyId: 2,
         job: 'WHM',
         incomplete: true,
+        joinedInProgress: true,
         note: 'updated',
         updatedAt: new Date(),
       }),
@@ -100,6 +102,12 @@ describe('Firestore record ownership rules', () => {
       }),
     )
     await assertFails(
+      setDoc(doc(db, 'users/alice/records/bad-join-state'), {
+        ...validRecord(),
+        joinedInProgress: 'yes',
+      }),
+    )
+    await assertFails(
       setDoc(doc(db, 'users/alice/records/bad-job'), {
         ...validRecord(),
         job: 'GLA',
@@ -107,10 +115,15 @@ describe('Firestore record ownership rules', () => {
     )
   })
 
-  it('accepts a missing job for records created by older clients', async () => {
+  it('accepts fields omitted by older clients', async () => {
     const db = environment.authenticatedContext('alice').firestore()
-    const { job: _job, ...legacyRecord } = validRecord()
+    const {
+      job: _job,
+      joinedInProgress: _joinedInProgress,
+      ...legacyRecord
+    } = validRecord()
     void _job
+    void _joinedInProgress
     await assertSucceeds(
       setDoc(doc(db, 'users/alice/records/legacy'), legacyRecord),
     )

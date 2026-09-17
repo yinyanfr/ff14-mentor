@@ -11,6 +11,7 @@ service cloud.firestore {
           'dutyId',
           'job',
           'incomplete',
+          'joinedInProgress',
           'occurredAt',
           'note',
           'createdAt',
@@ -28,6 +29,8 @@ service cloud.firestore {
               'BLM', 'SMN', 'RDM', 'PCT'
             ]))
         && data.incomplete is bool
+        && (!data.keys().hasAny(['joinedInProgress'])
+          || data.joinedInProgress is bool)
         && data.occurredAt is timestamp
         && data.note is string
         && data.note.size() <= 500

@@ -137,7 +137,9 @@ export function DutySearch({
                 <span>
                   <strong>{getDutyName(duty, locale)}</strong>
                   <small className="search-result-description">
-                    <span>{t(`dutyTypes.${duty.type}`)}</span>
+                    {duty.type !== 'guildhest' && (
+                      <span>{t(`dutyTypes.${duty.type}`)}</span>
+                    )}
                     <DutyTags dutyId={duty.content_finder_condition_id} />
                   </small>
                 </span>

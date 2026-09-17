@@ -35,6 +35,8 @@ export function HomePage() {
   const [deletingRecord, setDeletingRecord] = useState<DutyRecord | null>(null)
   const [selectedJob, setSelectedJob] = useState<Job | null>(null)
   const [selectedDuty, setSelectedDuty] = useState<Duty | null>(null)
+  const [incomplete, setIncomplete] = useState(false)
+  const [joinedInProgress, setJoinedInProgress] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const { today, recent } = useMemo(() => splitHomeRecords(records), [records])
@@ -67,9 +69,16 @@ export function HomePage() {
 
     setSubmitting(true)
     try {
-      await addRecord(selectedDuty.content_finder_condition_id, selectedJob)
+      await addRecord(
+        selectedDuty.content_finder_condition_id,
+        selectedJob,
+        incomplete,
+        joinedInProgress,
+      )
       setToast(t('home.added', { duty: getDutyName(selectedDuty, locale) }))
       setSelectedDuty(null)
+      setIncomplete(false)
+      setJoinedInProgress(false)
     } finally {
       setSubmitting(false)
     }
@@ -97,6 +106,26 @@ export function HomePage() {
                 onClearSelection={() => setSelectedDuty(null)}
                 onSelect={setSelectedDuty}
               />
+            </div>
+            <div className="record-form-options">
+              <label className="compact-check-option">
+                <input
+                  type="checkbox"
+                  checked={incomplete}
+                  onChange={(event) => setIncomplete(event.target.checked)}
+                />
+                <span>{t('record.incomplete')}</span>
+              </label>
+              <label className="compact-check-option">
+                <input
+                  type="checkbox"
+                  checked={joinedInProgress}
+                  onChange={(event) =>
+                    setJoinedInProgress(event.target.checked)
+                  }
+                />
+                <span>{t('record.joinedInProgress')}</span>
+              </label>
             </div>
             <div className="record-form-footer">
               <p className="search-hint">{t('home.searchHint')}</p>
@@ -151,7 +180,13 @@ export function HomePage() {
               {completedCount.toLocaleString(locale)} <span>/ 2,000</span>
             </strong>
           </span>
-          <span className="progress-percent">{Math.floor(progress)}%</span>
+          <span className="progress-percent">
+            {progress.toLocaleString(locale, {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            %
+          </span>
         </div>
         <div
           className="progress-track"

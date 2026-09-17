@@ -57,4 +57,14 @@ describe('duty data and search', () => {
     expect(getDutyTags(4)).toEqual([])
     expect(getDutyTags(68)).toEqual([])
   })
+
+  it('assigns a guildhest tag to every guildhest duty', () => {
+    const guildhests = duties.filter((duty) => duty.type === 'guildhest')
+    expect(guildhests.length).toBeGreaterThan(0)
+    expect(
+      guildhests.every((duty) =>
+        getDutyTags(duty.content_finder_condition_id).includes('guildhest'),
+      ),
+    ).toBe(true)
+  })
 })

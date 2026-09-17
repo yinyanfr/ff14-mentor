@@ -23,7 +23,12 @@ interface RecordsValue {
   loading: boolean
   syncing: boolean
   errorKey: string | null
-  addRecord: (dutyId: number, job?: Job | null) => Promise<DutyRecord>
+  addRecord: (
+    dutyId: number,
+    job?: Job | null,
+    incomplete?: boolean,
+    joinedInProgress?: boolean,
+  ) => Promise<DutyRecord>
   updateRecord: (id: string, update: RecordUpdate) => Promise<void>
   deleteRecord: (id: string) => Promise<void>
   retrySync: () => void
@@ -106,9 +111,20 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
   }, [authLoading, commitRecords, syncAttempt, user])
 
   const addRecord = useCallback(
-    async (dutyId: number, job: Job | null = null) => {
+    async (
+      dutyId: number,
+      job: Job | null = null,
+      incomplete = false,
+      joinedInProgress = false,
+    ) => {
       if (syncing) throw new Error('Records are syncing')
-      const record = createDutyRecord(dutyId, job)
+      const record = createDutyRecord(
+        dutyId,
+        job,
+        new Date(),
+        incomplete,
+        joinedInProgress,
+      )
       const previous = recordsRef.current
       const next = [record, ...previous].sort(sortRecordsNewestFirst)
       commitRecords(next)
@@ -143,6 +159,7 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
               dutyId: update.dutyId,
               job: update.job,
               incomplete: update.incomplete,
+              joinedInProgress: update.joinedInProgress,
               note: update.note.slice(0, 500),
               updatedAt,
             }
@@ -158,6 +175,7 @@ export function RecordsProvider({ children }: React.PropsWithChildren) {
             dutyId: update.dutyId,
             job: update.job,
             incomplete: update.incomplete,
+            joinedInProgress: update.joinedInProgress,
             note: update.note.slice(0, 500),
           })
         } else {

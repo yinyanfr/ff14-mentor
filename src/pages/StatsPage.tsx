@@ -334,7 +334,9 @@ export function StatsPage() {
                       <td>
                         <strong>{item.name}</strong>
                         <small className="ranking-duty-meta">
-                          <span>{t(`dutyTypes.${item.type}`)}</span>
+                          {item.type !== 'guildhest' && (
+                            <span>{t(`dutyTypes.${item.type}`)}</span>
+                          )}
                           <DutyTags dutyId={item.dutyId} />
                         </small>
                       </td>

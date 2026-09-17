@@ -26,6 +26,9 @@ export function EditRecordDialog({
     dutyById.get(record.dutyId),
   )
   const [incomplete, setIncomplete] = useState(record.incomplete)
+  const [joinedInProgress, setJoinedInProgress] = useState(
+    record.joinedInProgress,
+  )
   const [job, setJob] = useState(record.job)
   const [note, setNote] = useState(record.note)
   const [saving, setSaving] = useState(false)
@@ -39,6 +42,7 @@ export function EditRecordDialog({
         dutyId: duty.content_finder_condition_id,
         job,
         incomplete,
+        joinedInProgress,
         note: note.trim(),
       })
       onClose()
@@ -87,18 +91,32 @@ export function EditRecordDialog({
             label={t('record.changeDuty')}
           />
           <JobSelect value={job} onChange={setJob} disabled={saving} />
-          <label className="completion-option">
-            <input
-              type="checkbox"
-              checked={incomplete}
-              onChange={(event) => setIncomplete(event.target.checked)}
-              disabled={saving}
-            />
-            <span>
-              <strong>{t('record.incomplete')}</strong>
-              <small>{t('record.incompleteHint')}</small>
-            </span>
-          </label>
+          <div className="record-state-options">
+            <label className="completion-option">
+              <input
+                type="checkbox"
+                checked={incomplete}
+                onChange={(event) => setIncomplete(event.target.checked)}
+                disabled={saving}
+              />
+              <span>
+                <strong>{t('record.incomplete')}</strong>
+                <small>{t('record.incompleteHint')}</small>
+              </span>
+            </label>
+            <label className="completion-option joined-option">
+              <input
+                type="checkbox"
+                checked={joinedInProgress}
+                onChange={(event) => setJoinedInProgress(event.target.checked)}
+                disabled={saving}
+              />
+              <span>
+                <strong>{t('record.joinedInProgress')}</strong>
+                <small>{t('record.joinedInProgressHint')}</small>
+              </span>
+            </label>
+          </div>
           <label className="note-field">
             <span>{t('record.noteLabel')}</span>
             <textarea

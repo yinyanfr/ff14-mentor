@@ -26,6 +26,7 @@ function toFirestoreRecord(record: DutyRecord) {
     dutyId: record.dutyId,
     ...(record.job ? { job: record.job } : {}),
     incomplete: record.incomplete,
+    joinedInProgress: record.joinedInProgress,
     occurredAt: Timestamp.fromDate(new Date(record.occurredAt)),
     note: record.note,
     createdAt: Timestamp.fromDate(new Date(record.createdAt)),
@@ -42,6 +43,7 @@ function fromFirestoreRecord(
     dutyId: data.dutyId as number,
     job: isJob(data.job) ? data.job : null,
     incomplete: data.incomplete === true,
+    joinedInProgress: data.joinedInProgress === true,
     occurredAt: (data.occurredAt as Timestamp).toDate().toISOString(),
     note: data.note as string,
     createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
@@ -100,6 +102,7 @@ export async function updateCloudRecord(
     dutyId: update.dutyId,
     job: update.job ?? deleteField(),
     incomplete: update.incomplete,
+    joinedInProgress: update.joinedInProgress,
     note: update.note,
     updatedAt: Timestamp.now(),
   })

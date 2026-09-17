@@ -20,6 +20,8 @@ function normalizeRecord(value: unknown): DutyRecord | null {
     typeof record.updatedAt === 'string' &&
     (record.incomplete === undefined ||
       typeof record.incomplete === 'boolean') &&
+    (record.joinedInProgress === undefined ||
+      typeof record.joinedInProgress === 'boolean') &&
     (record.job === undefined || record.job === null || isJob(record.job))
 
   if (!isValid) return null
@@ -28,6 +30,7 @@ function normalizeRecord(value: unknown): DutyRecord | null {
     dutyId: record.dutyId as number,
     job: isJob(record.job) ? record.job : null,
     incomplete: record.incomplete === true,
+    joinedInProgress: record.joinedInProgress === true,
     occurredAt: record.occurredAt as string,
     note: record.note as string,
     createdAt: record.createdAt as string,
@@ -67,13 +70,16 @@ export function createDutyRecord(
   dutyId: number,
   job: DutyRecord['job'] = null,
   now = new Date(),
+  incomplete = false,
+  joinedInProgress = false,
 ): DutyRecord {
   const timestamp = now.toISOString()
   return {
     id: crypto.randomUUID(),
     dutyId,
     job,
-    incomplete: false,
+    incomplete,
+    joinedInProgress,
     occurredAt: timestamp,
     note: '',
     createdAt: timestamp,

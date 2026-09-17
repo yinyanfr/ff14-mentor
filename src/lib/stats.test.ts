@@ -24,6 +24,7 @@ function record(
     dutyId,
     job,
     incomplete,
+    joinedInProgress: false,
     occurredAt,
     note: '',
     createdAt: occurredAt,

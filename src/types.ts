@@ -66,6 +66,7 @@ export interface DutyRecord {
   dutyId: number
   job: Job | null
   incomplete: boolean
+  joinedInProgress: boolean
   occurredAt: string
   note: string
   createdAt: string
@@ -76,6 +77,7 @@ export interface RecordUpdate {
   dutyId: number
   job: Job | null
   incomplete: boolean
+  joinedInProgress: boolean
   note: string
 }
 

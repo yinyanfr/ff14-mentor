@@ -45,16 +45,19 @@ describe('HomePage record form', () => {
       </PreferencesProvider>,
     )
 
+    expect(screen.getByText('0.0%')).toBeInTheDocument()
     const dutyInput = screen.getByRole('combobox')
     await user.type(dutyInput, '沙')
     await user.click(screen.getByText('天然要害沙斯塔夏溶洞'))
+    await user.click(screen.getByRole('checkbox', { name: '未完成' }))
+    await user.click(screen.getByRole('checkbox', { name: '中途加入' }))
 
     expect(recordsMocks.addRecord).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: '提交记录' })).toBeEnabled()
 
     await user.click(screen.getByRole('button', { name: '提交记录' }))
 
-    expect(recordsMocks.addRecord).toHaveBeenCalledWith(4, null)
+    expect(recordsMocks.addRecord).toHaveBeenCalledWith(4, null, true, true)
     expect(screen.getByRole('button', { name: '正在提交…' })).toBeDisabled()
     expect(dutyInput).toBeDisabled()
 
@@ -64,5 +67,7 @@ describe('HomePage record form', () => {
       expect(screen.getByRole('button', { name: '提交记录' })).toBeDisabled()
     })
     expect(dutyInput).toHaveValue('')
+    expect(screen.getByRole('checkbox', { name: '未完成' })).not.toBeChecked()
+    expect(screen.getByRole('checkbox', { name: '中途加入' })).not.toBeChecked()
   })
 })

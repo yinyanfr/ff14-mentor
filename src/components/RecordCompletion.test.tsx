@@ -13,6 +13,7 @@ const record: DutyRecord = {
   dutyId: 4,
   job: 'PLD',
   incomplete: true,
+  joinedInProgress: true,
   occurredAt: '2026-09-12T08:00:00.000Z',
   note: '',
   createdAt: '2026-09-12T08:00:00.000Z',
@@ -35,6 +36,8 @@ describe('incomplete records', () => {
     )
 
     expect(screen.getByText('未完成')).toBeInTheDocument()
+    expect(screen.getByText('中途加入')).toBeInTheDocument()
+    expect(screen.getByText('Lv 15')).toBeInTheDocument()
     expect(container.querySelector('.record-job-avatar img')).toHaveAttribute(
       'src',
       '/assets/job-icons/Paladin.png',
@@ -48,7 +51,11 @@ describe('incomplete records', () => {
     render(
       <PreferencesProvider>
         <EditRecordDialog
-          record={{ ...record, incomplete: false }}
+          record={{
+            ...record,
+            incomplete: false,
+            joinedInProgress: false,
+          }}
           onSave={onSave}
           onClose={onClose}
         />
@@ -56,6 +63,7 @@ describe('incomplete records', () => {
     )
 
     await user.click(screen.getByRole('checkbox', { name: /未完成/ }))
+    await user.click(screen.getByRole('checkbox', { name: /中途加入/ }))
     await user.click(screen.getByRole('button', { name: /职业: 骑士/ }))
     await user.click(screen.getByRole('option', { name: /白魔法师/ }))
     await user.click(screen.getByRole('button', { name: '保存修改' }))
@@ -64,6 +72,7 @@ describe('incomplete records', () => {
       dutyId: 4,
       job: 'WHM',
       incomplete: true,
+      joinedInProgress: true,
       note: '',
     })
     expect(onClose).toHaveBeenCalledOnce()

@@ -43,6 +43,7 @@ function record(id: string, dutyId = 4): DutyRecord {
     dutyId,
     job: null,
     incomplete: false,
+    joinedInProgress: false,
     occurredAt: timestamp,
     note: '',
     createdAt: timestamp,
@@ -82,6 +83,7 @@ describe('record storage switching and merge', () => {
         dutyId: 2,
         job: 'WHM',
         incomplete: true,
+        joinedInProgress: true,
         note: 'updated',
       })
     })
@@ -89,6 +91,7 @@ describe('record storage switching and merge', () => {
       dutyId: 2,
       job: 'WHM',
       incomplete: true,
+      joinedInProgress: true,
       note: 'updated',
     })
 

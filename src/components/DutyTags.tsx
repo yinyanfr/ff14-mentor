@@ -9,6 +9,7 @@ interface DutyTagsProps {
 const tagClassNames: Record<DutyTag, string> = {
   mainScenario: 'main-scenario',
   crystalTower: 'crystal-tower',
+  guildhest: 'guildhest',
 }
 
 export function DutyTags({ dutyId }: DutyTagsProps) {

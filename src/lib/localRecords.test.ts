@@ -25,6 +25,7 @@ describe('guest record storage', () => {
       dutyId: 4,
       job: 'PLD',
       incomplete: false,
+      joinedInProgress: false,
       occurredAt: '2026-09-12T08:00:00.000Z',
       note: '',
     })
@@ -55,7 +56,7 @@ describe('guest record storage', () => {
     expect(loadLocalRecords()).toEqual([])
   })
 
-  it('treats records saved before the incomplete field as completed', () => {
+  it('defaults legacy completion and join-in-progress fields to false', () => {
     window.localStorage.setItem(
       localRecordStorageKey,
       JSON.stringify({
@@ -76,6 +77,7 @@ describe('guest record storage', () => {
     expect(loadLocalRecords()[0]).toMatchObject({
       job: null,
       incomplete: false,
+      joinedInProgress: false,
     })
   })
 })

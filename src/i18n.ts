@@ -92,6 +92,8 @@ const resources = {
         changeDuty: '更换副本',
         incomplete: '未完成',
         incompleteHint: '因中途退出等原因未完成；仍计入统计。',
+        joinedInProgress: '中途加入',
+        joinedInProgressHint: '加入已经开始的副本。',
         noteLabel: '备注',
         notePlaceholder: '记录值得记住的事情（可选）',
         noteCount: '{{count}} / 500',
@@ -117,8 +119,16 @@ const resources = {
         noData: '记录一些导随后，这里会出现统计图表。',
         other: '其他',
       },
-      duty: { level: '等级 {{level}}', patch: '版本 {{patch}}' },
-      dutyTags: { mainScenario: '主随', crystalTower: '水晶塔' },
+      duty: {
+        level: '等级 {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: '版本 {{patch}}',
+      },
+      dutyTags: {
+        mainScenario: '主随',
+        crystalTower: '水晶塔',
+        guildhest: '行会令',
+      },
       dutyTypes: {
         leveling_dungeon: '练级 4 人本',
         level_cap_dungeon: '版本后期 4 人本',
@@ -207,6 +217,8 @@ const resources = {
         changeDuty: '更換副本',
         incomplete: '未完成',
         incompleteHint: '因中途退出等原因未完成；仍會計入統計。',
+        joinedInProgress: '中途加入',
+        joinedInProgressHint: '加入已經開始的副本。',
         noteLabel: '備註',
         notePlaceholder: '記下值得記住的事情（選填）',
         noteCount: '{{count}} / 500',
@@ -232,8 +244,16 @@ const resources = {
         noData: '記錄一些導隨後，這裡會出現統計圖表。',
         other: '其他',
       },
-      duty: { level: '等級 {{level}}', patch: '版本 {{patch}}' },
-      dutyTags: { mainScenario: '主隨', crystalTower: '水晶塔' },
+      duty: {
+        level: '等級 {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: '版本 {{patch}}',
+      },
+      dutyTags: {
+        mainScenario: '主隨',
+        crystalTower: '水晶塔',
+        guildhest: '行會令',
+      },
       dutyTypes: {
         leveling_dungeon: '練級 4 人副本',
         level_cap_dungeon: '版本後期 4 人副本',
@@ -325,6 +345,8 @@ const resources = {
         incomplete: '未完了',
         incompleteHint:
           '途中退出などで完了できなかった記録。統計には含まれます。',
+        joinedInProgress: '途中参加',
+        joinedInProgressHint: '進行中のコンテンツに途中参加した記録。',
         noteLabel: 'メモ',
         notePlaceholder: '覚えておきたいこと（任意）',
         noteCount: '{{count}} / 500',
@@ -350,10 +372,15 @@ const resources = {
         noData: '記録を追加すると統計が表示されます。',
         other: 'その他',
       },
-      duty: { level: 'レベル {{level}}', patch: 'パッチ {{patch}}' },
+      duty: {
+        level: 'レベル {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: 'パッチ {{patch}}',
+      },
       dutyTags: {
         mainScenario: 'メインクエスト',
         crystalTower: 'クリスタルタワー',
+        guildhest: 'ギルドオーダー',
       },
       dutyTypes: {
         leveling_dungeon: 'レベリングダンジョン',
@@ -445,6 +472,8 @@ const resources = {
         incomplete: 'Incomplete',
         incompleteHint:
           'Mark runs that ended early; they still count in stats.',
+        joinedInProgress: 'Join in Progress',
+        joinedInProgressHint: 'Joined a duty that was already in progress.',
         noteLabel: 'Note',
         notePlaceholder: 'Anything worth remembering? (optional)',
         noteCount: '{{count}} / 500',
@@ -470,10 +499,15 @@ const resources = {
         noData: 'Log a few mentor duties to reveal your statistics.',
         other: 'Other',
       },
-      duty: { level: 'Level {{level}}', patch: 'Patch {{patch}}' },
+      duty: {
+        level: 'Level {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: 'Patch {{patch}}',
+      },
       dutyTags: {
         mainScenario: 'Main Scenario',
         crystalTower: 'Crystal Tower',
+        guildhest: 'Guildhest',
       },
       dutyTypes: {
         leveling_dungeon: 'Leveling dungeon',
@@ -565,6 +599,8 @@ const resources = {
         incomplete: 'Nicht abgeschlossen',
         incompleteHint:
           'Für vorzeitig beendete Einsätze; sie bleiben in der Statistik.',
+        joinedInProgress: 'Laufender Inhalt',
+        joinedInProgressHint: 'Einem bereits laufenden Inhalt beigetreten.',
         noteLabel: 'Notiz',
         notePlaceholder: 'Etwas, das du festhalten möchtest? (optional)',
         noteCount: '{{count}} / 500',
@@ -590,8 +626,16 @@ const resources = {
         noData: 'Trage einige Mentor-Inhalte ein, um Statistiken zu sehen.',
         other: 'Andere',
       },
-      duty: { level: 'Stufe {{level}}', patch: 'Patch {{patch}}' },
-      dutyTags: { mainScenario: 'Hauptszenario', crystalTower: 'Kristallturm' },
+      duty: {
+        level: 'Stufe {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: 'Patch {{patch}}',
+      },
+      dutyTags: {
+        mainScenario: 'Hauptszenario',
+        crystalTower: 'Kristallturm',
+        guildhest: 'Gildengeheiß',
+      },
       dutyTypes: {
         leveling_dungeon: 'Stufensteigerungs-Dungeon',
         level_cap_dungeon: 'Endgame-Dungeon',
@@ -683,6 +727,8 @@ const resources = {
         incomplete: 'Non terminée',
         incompleteHint:
           'Pour une mission interrompue ; elle reste incluse dans les statistiques.',
+        joinedInProgress: 'Mission en cours',
+        joinedInProgressHint: 'Mission rejointe après son commencement.',
         noteLabel: 'Note',
         notePlaceholder: 'Un souvenir à conserver ? (facultatif)',
         noteCount: '{{count}} / 500',
@@ -708,8 +754,16 @@ const resources = {
         noData: 'Ajoutez quelques missions pour afficher les statistiques.',
         other: 'Autres',
       },
-      duty: { level: 'Niveau {{level}}', patch: 'Patch {{patch}}' },
-      dutyTags: { mainScenario: 'Épopée', crystalTower: 'Tour de Cristal' },
+      duty: {
+        level: 'Niveau {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: 'Patch {{patch}}',
+      },
+      dutyTags: {
+        mainScenario: 'Épopée',
+        crystalTower: 'Tour de Cristal',
+        guildhest: 'Opération de guilde',
+      },
       dutyTypes: {
         leveling_dungeon: 'Donjon de progression',
         level_cap_dungeon: 'Donjon de niveau maximum',
@@ -801,6 +855,8 @@ const resources = {
         incomplete: '미완료',
         incompleteHint:
           '중도 퇴장 등으로 완료하지 못한 기록이며 통계에는 포함됩니다.',
+        joinedInProgress: '진행 중 참가',
+        joinedInProgressHint: '이미 진행 중인 임무에 참가한 기록입니다.',
         noteLabel: '메모',
         notePlaceholder: '기억할 내용을 남겨 보세요 (선택)',
         noteCount: '{{count}} / 500',
@@ -826,8 +882,16 @@ const resources = {
         noData: '멘토 임무를 기록하면 통계가 표시됩니다.',
         other: '기타',
       },
-      duty: { level: '레벨 {{level}}', patch: '패치 {{patch}}' },
-      dutyTags: { mainScenario: '주요 임무', crystalTower: '크리스탈 타워' },
+      duty: {
+        level: '레벨 {{level}}',
+        levelShort: 'Lv {{level}}',
+        patch: '패치 {{patch}}',
+      },
+      dutyTags: {
+        mainScenario: '주요 임무',
+        crystalTower: '크리스탈 타워',
+        guildhest: '길드 작전',
+      },
       dutyTypes: {
         leveling_dungeon: '레벨링 던전',
         level_cap_dungeon: '만렙 던전',

@@ -42,21 +42,39 @@ export function RecordList({
             <JobIcon job={record.job} className="record-job-avatar" />
             <div className="record-main">
               <div className="record-heading">
-                <strong>{name}</strong>
-                {duty && (
-                  <span className="type-chip">
-                    {t(`dutyTypes.${duty.type}`)}
+                <div className="record-title">
+                  {duty && (
+                    <span className="level-chip">
+                      {t('duty.levelShort', {
+                        level: duty.level.required,
+                      })}
+                    </span>
+                  )}
+                  <strong>{name}</strong>
+                </div>
+                <div className="record-tag-row">
+                  {duty && duty.type !== 'guildhest' && (
+                    <span className="type-chip">
+                      {t(`dutyTypes.${duty.type}`)}
+                    </span>
+                  )}
+                  <DutyTags dutyId={record.dutyId} />
+                  <span className="job-chip">
+                    {record.job
+                      ? getJobName(record.job, locale)
+                      : t('jobs.none')}
                   </span>
-                )}
-                <DutyTags dutyId={record.dutyId} />
-                <span className="job-chip">
-                  {record.job ? getJobName(record.job, locale) : t('jobs.none')}
-                </span>
-                {record.incomplete && (
-                  <span className="incomplete-chip">
-                    {t('record.incomplete')}
-                  </span>
-                )}
+                  {record.incomplete && (
+                    <span className="incomplete-chip">
+                      {t('record.incomplete')}
+                    </span>
+                  )}
+                  {record.joinedInProgress && (
+                    <span className="joined-chip">
+                      {t('record.joinedInProgress')}
+                    </span>
+                  )}
+                </div>
               </div>
               <time dateTime={record.occurredAt}>
                 {formatter.format(new Date(record.occurredAt))}

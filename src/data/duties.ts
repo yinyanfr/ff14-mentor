@@ -2,7 +2,7 @@ import rawDutyData from '../../assets/ff14_mentor_roulette_duties_7.56.json'
 
 import type { Duty, DutyDataset, DutyLocale, DutyType, Locale } from '../types'
 
-export type DutyTag = 'mainScenario' | 'crystalTower'
+export type DutyTag = 'mainScenario' | 'crystalTower' | 'guildhest'
 
 const dataset = rawDutyData as DutyDataset
 
@@ -52,7 +52,9 @@ export function getDutyName(duty: Duty, locale: Locale) {
 }
 
 export function getDutyTags(dutyId: number): readonly DutyTag[] {
-  return dutyTagsById.get(dutyId) ?? []
+  const tags = [...(dutyTagsById.get(dutyId) ?? [])]
+  if (dutyById.get(dutyId)?.type === 'guildhest') tags.push('guildhest')
+  return tags
 }
 
 export function normalizeSearchText(value: string) {
