@@ -768,6 +768,27 @@ button:disabled {
   font-size: 1rem;
   letter-spacing: -0.02em;
 }
+.section-heading-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+.share-button {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--line));
+  border-radius: 10px;
+  color: var(--primary-strong);
+  background: var(--primary-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
 .count-badge {
   display: grid;
   min-width: 28px;
@@ -876,6 +897,10 @@ button:disabled {
   color: #4f7e42;
   background: color-mix(in srgb, #77b96a 20%, var(--surface-solid));
 }
+.special-duty-chip.current-version {
+  color: #8b3f7f;
+  background: color-mix(in srgb, #d36bc2 18%, var(--surface-solid));
+}
 [data-theme='dark'] .special-duty-chip.main-scenario {
   color: #f0bd72;
 }
@@ -884,6 +909,9 @@ button:disabled {
 }
 [data-theme='dark'] .special-duty-chip.guildhest {
   color: #9fd594;
+}
+[data-theme='dark'] .special-duty-chip.current-version {
+  color: #efa7e3;
 }
 .job-chip {
   flex: 0 0 auto;
@@ -1546,6 +1574,13 @@ td .ranking-duty-meta {
 }
 
 @media (max-width: 620px) {
+  .share-button {
+    width: 34px;
+    padding: 0;
+  }
+  .share-button span {
+    display: none;
+  }
   .language-picker {
     position: relative;
     width: 2.75rem;

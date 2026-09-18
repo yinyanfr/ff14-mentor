@@ -1,4 +1,4 @@
-import { CalendarDays, LoaderCircle, Target } from 'lucide-react'
+import { CalendarDays, LoaderCircle, Share2, Target } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,9 +10,11 @@ import { RecordList } from '../components/RecordList'
 import { usePreferences } from '../contexts/PreferencesContext'
 import { useRecords } from '../contexts/RecordsContext'
 import { dutyById, getDutyName } from '../data/duties'
+import { downloadTodayShareImage } from '../lib/shareImage'
 import {
   calculateMentorProgress,
   countCompletedRecords,
+  localDateKey,
   splitHomeRecords,
 } from '../lib/stats'
 import type { Duty, DutyRecord, Job } from '../types'
@@ -38,6 +40,7 @@ export function HomePage() {
   const [incomplete, setIncomplete] = useState(false)
   const [joinedInProgress, setJoinedInProgress] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const { today, recent } = useMemo(() => splitHomeRecords(records), [records])
   const completedCount = useMemo(
@@ -81,6 +84,30 @@ export function HomePage() {
       setJoinedInProgress(false)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function shareTodayRecords() {
+    if (!today.length || sharing) return
+    setSharing(true)
+    try {
+      await downloadTodayShareImage({
+        records: today,
+        locale,
+        labels: {
+          title: t('share.title'),
+          date: dateLabel,
+          count: t('share.count', { count: today.length }),
+          incomplete: t('record.incomplete'),
+          joinedInProgress: t('record.joinedInProgress'),
+          noJob: t('jobs.none'),
+        },
+        filename: `ff14-mentor-${localDateKey(new Date())}.png`,
+      })
+    } catch {
+      setToast(t('share.failed'))
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -209,7 +236,23 @@ export function HomePage() {
             </span>
             <h2>{t('home.today')}</h2>
           </div>
-          <span className="count-badge">{today.length}</span>
+          <div className="section-heading-actions">
+            <button
+              className="share-button"
+              type="button"
+              onClick={() => void shareTodayRecords()}
+              disabled={loading || !today.length || sharing}
+              aria-label={t(sharing ? 'share.generating' : 'share.button')}
+            >
+              {sharing ? (
+                <LoaderCircle className="spin" size={16} />
+              ) : (
+                <Share2 size={16} />
+              )}
+              <span>{t(sharing ? 'share.generating' : 'share.button')}</span>
+            </button>
+            <span className="count-badge">{today.length}</span>
+          </div>
         </header>
         {loading ? (
           <div className="loading-card">

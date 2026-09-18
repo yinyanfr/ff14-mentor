@@ -67,4 +67,26 @@ describe('duty data and search', () => {
       ),
     ).toBe(true)
   })
+
+  it('assigns the current-version tag only to 7.x duties', () => {
+    const currentDuties = duties.filter((duty) => duty.patch.startsWith('7.'))
+    const olderDuties = duties.filter((duty) => !duty.patch.startsWith('7.'))
+
+    expect(currentDuties.length).toBeGreaterThan(0)
+    expect(
+      currentDuties.every((duty) =>
+        getDutyTags(duty.content_finder_condition_id).includes(
+          'currentVersion',
+        ),
+      ),
+    ).toBe(true)
+    expect(
+      olderDuties.every(
+        (duty) =>
+          !getDutyTags(duty.content_finder_condition_id).includes(
+            'currentVersion',
+          ),
+      ),
+    ).toBe(true)
+  })
 })

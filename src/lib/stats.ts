@@ -1,6 +1,19 @@
-import { dutyById, dutyTypes, getDutyName } from '../data/duties'
+import { dutyById, getDutyName, isMainScenarioDuty } from '../data/duties'
 import { jobs } from '../data/jobs'
 import type { DutyRecord, DutyType, Job, Locale } from '../types'
+
+export type DutyCategory = DutyType | 'mainScenario'
+
+const dutyCategories: DutyCategory[] = [
+  'leveling_dungeon',
+  'level_cap_dungeon',
+  'mainScenario',
+  'trial',
+  'extreme_trial',
+  'normal_raid',
+  'alliance_raid',
+  'guildhest',
+]
 
 export function localDateKey(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value
@@ -60,15 +73,20 @@ export function buildDutyStats(records: DutyRecord[], locale: Locale) {
 
 export function buildTypeStats(records: DutyRecord[]) {
   const initial = Object.fromEntries(
-    dutyTypes.map((type) => [type, 0]),
-  ) as Record<DutyType, number>
+    dutyCategories.map((type) => [type, 0]),
+  ) as Record<DutyCategory, number>
 
   for (const record of records) {
     const duty = dutyById.get(record.dutyId)
-    if (duty) initial[duty.type] += 1
+    if (duty) {
+      const category = isMainScenarioDuty(record.dutyId)
+        ? 'mainScenario'
+        : duty.type
+      initial[category] += 1
+    }
   }
 
-  return dutyTypes.map((type) => ({ type, count: initial[type] }))
+  return dutyCategories.map((type) => ({ type, count: initial[type] }))
 }
 
 export function buildJobStats(records: DutyRecord[]) {

@@ -2,7 +2,8 @@ import rawDutyData from '../../assets/ff14_mentor_roulette_duties_7.56.json'
 
 import type { Duty, DutyDataset, DutyLocale, DutyType, Locale } from '../types'
 
-export type DutyTag = 'mainScenario' | 'crystalTower' | 'guildhest'
+export type DutyTag =
+  'mainScenario' | 'crystalTower' | 'guildhest' | 'currentVersion'
 
 const dataset = rawDutyData as DutyDataset
 
@@ -24,6 +25,8 @@ const dutyTagsById = new Map<number, readonly DutyTag[]>([
   [102, ['crystalTower']],
   [111, ['crystalTower']],
 ])
+
+const mainScenarioDutyIds = new Set([15, 16, 830])
 
 export const dutyTypes: DutyType[] = [
   'leveling_dungeon',
@@ -53,8 +56,14 @@ export function getDutyName(duty: Duty, locale: Locale) {
 
 export function getDutyTags(dutyId: number): readonly DutyTag[] {
   const tags = [...(dutyTagsById.get(dutyId) ?? [])]
-  if (dutyById.get(dutyId)?.type === 'guildhest') tags.push('guildhest')
+  const duty = dutyById.get(dutyId)
+  if (duty?.type === 'guildhest') tags.push('guildhest')
+  if (duty?.patch.startsWith('7.')) tags.push('currentVersion')
   return tags
+}
+
+export function isMainScenarioDuty(dutyId: number) {
+  return mainScenarioDutyIds.has(dutyId)
 }
 
 export function normalizeSearchText(value: string) {

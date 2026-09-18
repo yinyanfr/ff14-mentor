@@ -38,6 +38,7 @@ const chartColors = [
   '#5596d8',
   '#9c6bd6',
   '#78909c',
+  '#c58b38',
 ]
 
 const jobRoleColors: Record<JobRole, string> = {
@@ -60,7 +61,13 @@ export function StatsPage() {
     () =>
       buildTypeStats(records)
         .filter((item) => item.count > 0)
-        .map((item) => ({ ...item, name: t(`dutyTypes.${item.type}`) })),
+        .map((item) => ({
+          ...item,
+          name:
+            item.type === 'mainScenario'
+              ? t('dutyTags.mainScenario')
+              : t(`dutyTypes.${item.type}`),
+        })),
     [records, t],
   )
   const dailyStats = useMemo(

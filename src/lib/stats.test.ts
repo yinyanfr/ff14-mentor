@@ -65,6 +65,21 @@ describe('record statistics', () => {
     expect(daily.at(-1)?.count).toBe(2)
   })
 
+  it('counts the three main scenario duties in their own category', () => {
+    const mainScenarioRecords = [
+      record('main-1', 15, '2026-09-12T08:00:00.000Z'),
+      record('main-2', 16, '2026-09-12T09:00:00.000Z'),
+      record('main-3', 830, '2026-09-12T10:00:00.000Z'),
+    ]
+    const result = buildTypeStats(mainScenarioRecords)
+
+    expect(result.find((item) => item.type === 'mainScenario')?.count).toBe(3)
+    expect(
+      result.find((item) => item.type === 'level_cap_dungeon')?.count,
+    ).toBe(0)
+    expect(result.find((item) => item.type === 'trial')?.count).toBe(0)
+  })
+
   it('groups records by job and treats legacy records as no job', () => {
     const withJobs = [
       { ...records[0], job: 'PLD' as const },

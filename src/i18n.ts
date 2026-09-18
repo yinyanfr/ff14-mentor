@@ -86,6 +86,13 @@ const resources = {
         submitRecord: '提交记录',
         submitting: '正在提交…',
       },
+      share: {
+        button: '分享今日记录',
+        generating: '正在生成分享图片',
+        title: '今日导随记录',
+        count: '{{count}} 次',
+        failed: '分享图片生成失败，请重试。',
+      },
       record: {
         editTitle: '编辑导随记录',
         jobLabel: '职业',
@@ -128,6 +135,7 @@ const resources = {
         mainScenario: '主随',
         crystalTower: '水晶塔',
         guildhest: '行会令',
+        currentVersion: '当前版本',
       },
       dutyTypes: {
         leveling_dungeon: '练级 4 人本',
@@ -211,6 +219,13 @@ const resources = {
         submitRecord: '提交記錄',
         submitting: '正在提交…',
       },
+      share: {
+        button: '分享今日記錄',
+        generating: '正在產生分享圖片',
+        title: '今日導隨記錄',
+        count: '{{count}} 次',
+        failed: '無法產生分享圖片，請重試。',
+      },
       record: {
         editTitle: '編輯導隨記錄',
         jobLabel: '職業',
@@ -253,6 +268,7 @@ const resources = {
         mainScenario: '主隨',
         crystalTower: '水晶塔',
         guildhest: '行會令',
+        currentVersion: '當前版本',
       },
       dutyTypes: {
         leveling_dungeon: '練級 4 人副本',
@@ -338,6 +354,13 @@ const resources = {
         submitRecord: '記録する',
         submitting: '記録中…',
       },
+      share: {
+        button: '今日の記録を共有',
+        generating: '共有画像を作成中',
+        title: '今日のメンタールーレット',
+        count: '{{count}} 回',
+        failed: '共有画像を作成できませんでした。',
+      },
       record: {
         editTitle: '記録を編集',
         jobLabel: 'ジョブ',
@@ -381,6 +404,7 @@ const resources = {
         mainScenario: 'メインクエスト',
         crystalTower: 'クリスタルタワー',
         guildhest: 'ギルドオーダー',
+        currentVersion: '最新バージョン',
       },
       dutyTypes: {
         leveling_dungeon: 'レベリングダンジョン',
@@ -465,6 +489,13 @@ const resources = {
         submitRecord: 'Submit record',
         submitting: 'Submitting…',
       },
+      share: {
+        button: 'Share today',
+        generating: 'Creating share image',
+        title: "Today's mentor duties",
+        count: '{{count}} runs',
+        failed: 'Could not create the share image. Please try again.',
+      },
       record: {
         editTitle: 'Edit mentor record',
         jobLabel: 'Job',
@@ -508,6 +539,7 @@ const resources = {
         mainScenario: 'Main Scenario',
         crystalTower: 'Crystal Tower',
         guildhest: 'Guildhest',
+        currentVersion: 'Current expansion',
       },
       dutyTypes: {
         leveling_dungeon: 'Leveling dungeon',
@@ -592,6 +624,13 @@ const resources = {
         submitRecord: 'Eintrag absenden',
         submitting: 'Wird gespeichert…',
       },
+      share: {
+        button: 'Heute teilen',
+        generating: 'Bild wird erstellt',
+        title: 'Heutige Mentor-Inhalte',
+        count: '{{count}} Einsätze',
+        failed: 'Das Bild konnte nicht erstellt werden.',
+      },
       record: {
         editTitle: 'Eintrag bearbeiten',
         jobLabel: 'Job',
@@ -635,6 +674,7 @@ const resources = {
         mainScenario: 'Hauptszenario',
         crystalTower: 'Kristallturm',
         guildhest: 'Gildengeheiß',
+        currentVersion: 'Aktuelle Erweiterung',
       },
       dutyTypes: {
         leveling_dungeon: 'Stufensteigerungs-Dungeon',
@@ -720,6 +760,13 @@ const resources = {
         submitRecord: 'Ajouter l’entrée',
         submitting: 'Ajout en cours…',
       },
+      share: {
+        button: 'Partager aujourd’hui',
+        generating: 'Création de l’image',
+        title: 'Missions mentor du jour',
+        count: '{{count}} missions',
+        failed: 'Impossible de créer l’image de partage.',
+      },
       record: {
         editTitle: 'Modifier l’entrée',
         jobLabel: 'Job',
@@ -763,6 +810,7 @@ const resources = {
         mainScenario: 'Épopée',
         crystalTower: 'Tour de Cristal',
         guildhest: 'Opération de guilde',
+        currentVersion: 'Extension actuelle',
       },
       dutyTypes: {
         leveling_dungeon: 'Donjon de progression',
@@ -848,6 +896,13 @@ const resources = {
         submitRecord: '기록 제출',
         submitting: '제출 중…',
       },
+      share: {
+        button: '오늘 기록 공유',
+        generating: '공유 이미지 생성 중',
+        title: '오늘의 멘토 임무',
+        count: '{{count}}회',
+        failed: '공유 이미지를 만들지 못했습니다.',
+      },
       record: {
         editTitle: '기록 수정',
         jobLabel: '직업',
@@ -891,6 +946,7 @@ const resources = {
         mainScenario: '주요 임무',
         crystalTower: '크리스탈 타워',
         guildhest: '길드 작전',
+        currentVersion: '현재 확장팩',
       },
       dutyTypes: {
         leveling_dungeon: '레벨링 던전',

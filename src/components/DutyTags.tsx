@@ -10,6 +10,7 @@ const tagClassNames: Record<DutyTag, string> = {
   mainScenario: 'main-scenario',
   crystalTower: 'crystal-tower',
   guildhest: 'guildhest',
+  currentVersion: 'current-version',
 }
 
 export function DutyTags({ dutyId }: DutyTagsProps) {
