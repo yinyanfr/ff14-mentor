@@ -1,18 +1,42 @@
 import { describe, expect, it } from 'vitest'
 
-import { calculateShareGrid, getShareRecordBadges } from './shareImage'
+import {
+  calculateShareGrid,
+  calculateShareLayout,
+  getShareRecordBadges,
+} from './shareImage'
 import type { DutyRecord } from '../types'
 
 describe('today share image layout', () => {
-  it('uses two columns of wide cards for sixteen records', () => {
-    expect(calculateShareGrid(16)).toEqual({ columns: 2, rows: 8 })
+  it('uses a balanced grid of wide cards for sixteen records', () => {
+    expect(calculateShareGrid(16)).toEqual({ columns: 4, rows: 4 })
   })
 
-  it('keeps no more than eight rows in each column', () => {
+  it('keeps rows and columns close to an even grid', () => {
     expect(calculateShareGrid(1)).toEqual({ columns: 1, rows: 1 })
-    expect(calculateShareGrid(5)).toEqual({ columns: 1, rows: 5 })
-    expect(calculateShareGrid(9)).toEqual({ columns: 2, rows: 5 })
-    expect(calculateShareGrid(20)).toEqual({ columns: 3, rows: 7 })
+    expect(calculateShareGrid(5)).toEqual({ columns: 2, rows: 3 })
+    expect(calculateShareGrid(9)).toEqual({ columns: 3, rows: 3 })
+    expect(calculateShareGrid(15)).toEqual({ columns: 3, rows: 5 })
+    expect(calculateShareGrid(20)).toEqual({ columns: 4, rows: 5 })
+  })
+
+  it('grows the canvas with its content and uses landscape for larger grids', () => {
+    const singleRecord = calculateShareLayout(1)
+    const fifteenRecords = calculateShareLayout(15)
+
+    expect(singleRecord).toMatchObject({
+      canvasWidth: 720,
+      canvasHeight: 380,
+    })
+    expect(fifteenRecords).toMatchObject({
+      columns: 3,
+      rows: 5,
+      canvasWidth: 1220,
+      canvasHeight: 836,
+    })
+    expect(fifteenRecords.canvasWidth).toBeGreaterThan(
+      fifteenRecords.canvasHeight,
+    )
   })
 
   it('includes the same duty and record tags as the record list', () => {

@@ -7,8 +7,12 @@ import {
 import { getJobIconPath, getJobName } from '../data/jobs'
 import type { DutyRecord, DutyType, Job, Locale } from '../types'
 
-const CANVAS_WIDTH = 1080
-const CANVAS_HEIGHT = 1350
+const MIN_CANVAS_WIDTH = 720
+const CANVAS_PADDING_X = 56
+const GRID_TOP = 210
+const GRID_GAP = 14
+const MIN_CARD_HEIGHT = 100
+const FOOTER_HEIGHT = 70
 const FONT_FAMILY =
   '"PingFang SC", "Hiragino Sans", "Noto Sans CJK SC", Arial, sans-serif'
 
@@ -32,8 +36,50 @@ interface ShareImageOptions {
 
 export function calculateShareGrid(count: number) {
   if (count <= 0) return { columns: 0, rows: 0 }
-  const columns = Math.ceil(count / 8)
+  const columns = Math.floor(Math.sqrt(count))
   return { columns, rows: Math.ceil(count / columns) }
+}
+
+export function calculateShareLayout(
+  count: number,
+  cardHeight = MIN_CARD_HEIGHT,
+) {
+  const { columns, rows } = calculateShareGrid(count)
+  if (!columns || !rows) {
+    return {
+      columns,
+      rows,
+      canvasWidth: 0,
+      canvasHeight: 0,
+      cardWidth: 0,
+      cardHeight: 0,
+      gap: 0,
+      paddingX: 0,
+      gridTop: 0,
+    }
+  }
+
+  const cardWidth = columns === 1 ? 560 : columns === 2 ? 420 : 360
+  const gridWidth = cardWidth * columns + GRID_GAP * (columns - 1)
+  const canvasWidth = Math.max(
+    MIN_CANVAS_WIDTH,
+    gridWidth + CANVAS_PADDING_X * 2,
+  )
+  const paddingX = (canvasWidth - gridWidth) / 2
+  const canvasHeight =
+    GRID_TOP + cardHeight * rows + GRID_GAP * (rows - 1) + FOOTER_HEIGHT
+
+  return {
+    columns,
+    rows,
+    canvasWidth,
+    canvasHeight,
+    cardWidth,
+    cardHeight,
+    gap: GRID_GAP,
+    paddingX,
+    gridTop: GRID_TOP,
+  }
 }
 
 type ShareBadgeTone =
@@ -260,91 +306,78 @@ export async function createTodayShareImage({
   if (!records.length) throw new Error('No records to share')
   await document.fonts?.ready
 
+  const sortedRecords = [...records].sort(
+    (left, right) => Date.parse(left.occurredAt) - Date.parse(right.occurredAt),
+  )
+  const maximumBadgeCount = Math.max(
+    ...sortedRecords.map(
+      (record) => getShareRecordBadges(record, locale, labels).length,
+    ),
+  )
+  const badgeRows = Math.ceil(maximumBadgeCount / 2)
+  const cardHeight = Math.max(MIN_CARD_HEIGHT, 45 + badgeRows * 27)
+  const layout = calculateShareLayout(sortedRecords.length, cardHeight)
   const canvas = document.createElement('canvas')
-  canvas.width = CANVAS_WIDTH
-  canvas.height = CANVAS_HEIGHT
+  canvas.width = layout.canvasWidth
+  canvas.height = layout.canvasHeight
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Canvas is unavailable')
 
   const background = context.createLinearGradient(
     0,
     0,
-    CANVAS_WIDTH,
-    CANVAS_HEIGHT,
+    layout.canvasWidth,
+    layout.canvasHeight,
   )
   background.addColorStop(0, '#f4f2ff')
   background.addColorStop(0.5, '#f8f7fc')
   background.addColorStop(1, '#e8f6f4')
   context.fillStyle = background
-  context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  context.fillRect(0, 0, layout.canvasWidth, layout.canvasHeight)
 
   context.fillStyle = '#7066e8'
-  roundedRect(context, 64, 64, 116, 10, 5)
+  roundedRect(context, layout.paddingX, 48, 116, 10, 5)
   context.fill()
   context.fillStyle = '#252236'
   context.textAlign = 'left'
   context.textBaseline = 'alphabetic'
-  setFont(context, 800, 48)
-  context.fillText(labels.title, 64, 140)
+  setFont(context, 800, 44)
+  context.fillText(labels.title, layout.paddingX, 126)
   context.fillStyle = '#69647c'
-  setFont(context, 600, 25)
-  context.fillText(labels.date, 64, 184)
+  setFont(context, 600, 23)
+  context.fillText(labels.date, layout.paddingX, 168)
   context.textAlign = 'right'
   context.fillStyle = '#7066e8'
-  setFont(context, 800, 58)
-  context.fillText(labels.count, CANVAS_WIDTH - 64, 145)
+  setFont(context, 800, 54)
+  context.fillText(labels.count, layout.canvasWidth - layout.paddingX, 132)
 
-  const sortedRecords = [...records].sort(
-    (left, right) => Date.parse(left.occurredAt) - Date.parse(right.occurredAt),
-  )
   const icons = await loadJobIcons(sortedRecords)
-  const { columns, rows } = calculateShareGrid(sortedRecords.length)
-  const paddingX = 64
-  const gridAreaTop = 245
-  const gridBottom = 1238
-  const gap = Math.max(7, Math.min(14, 82 / Math.max(columns, rows)))
-  const cellWidth =
-    (CANVAS_WIDTH - paddingX * 2 - gap * (columns - 1)) / columns
-  const availableGridHeight = gridBottom - gridAreaTop
-  const availableCellHeight = (availableGridHeight - gap * (rows - 1)) / rows
-  const cellHeight = Math.min(availableCellHeight, 165)
-  const gridHeight = cellHeight * rows + gap * (rows - 1)
-  const gridTop = gridAreaTop + (availableGridHeight - gridHeight) / 2
-  const cardRadius = Math.max(10, Math.min(18, cellHeight * 0.14))
-  const cardPadding = Math.max(8, Math.min(14, cellHeight * 0.08))
-  const smallFont = Math.max(
-    9,
-    Math.min(13, cellWidth * 0.025, cellHeight * 0.1),
-  )
-  const nameFont = Math.max(
-    12,
-    Math.min(20, cellWidth * 0.042, cellHeight * 0.15),
-  )
-  const badgeFont = Math.max(8, Math.min(11, smallFont - 1))
-  const iconSize = Math.max(
-    34,
-    Math.min(54, cellHeight - cardPadding * 2, cellWidth * 0.16),
-  )
+  const cardRadius = 16
+  const cardPadding = 12
+  const smallFont = 12
+  const nameFont = 18
+  const badgeFont = 10
+  const iconSize = 54
 
   sortedRecords.forEach((record, index) => {
-    const column = index % columns
-    const row = Math.floor(index / columns)
-    const x = paddingX + column * (cellWidth + gap)
-    const y = gridTop + row * (cellHeight + gap)
+    const column = index % layout.columns
+    const row = Math.floor(index / layout.columns)
+    const x = layout.paddingX + column * (layout.cardWidth + layout.gap)
+    const y = layout.gridTop + row * (layout.cardHeight + layout.gap)
     const duty = dutyById.get(record.dutyId)
     const dutyName = duty ? getDutyName(duty, locale) : `#${record.dutyId}`
 
     context.save()
     context.shadowColor = 'rgba(48, 42, 78, 0.09)'
-    context.shadowBlur = 18
-    context.shadowOffsetY = 7
-    roundedRect(context, x, y, cellWidth, cellHeight, cardRadius)
+    context.shadowBlur = 14
+    context.shadowOffsetY = 5
+    roundedRect(context, x, y, layout.cardWidth, layout.cardHeight, cardRadius)
     context.fillStyle = 'rgba(255, 255, 255, 0.92)'
     context.fill()
     context.restore()
 
     const iconX = x + cardPadding
-    const iconY = y + (cellHeight - iconSize) / 2
+    const iconY = y + (layout.cardHeight - iconSize) / 2
     if (record.job && icons.get(record.job)) {
       context.drawImage(
         icons.get(record.job)!,
@@ -364,14 +397,8 @@ export async function createTodayShareImage({
       context.fillText('—', iconX + iconSize / 2, iconY + iconSize / 2)
     }
 
-    context.fillStyle = '#8b86a0'
-    context.textBaseline = 'top'
-    context.textAlign = 'center'
-    setFont(context, 750, smallFont)
-    context.fillText(`#${index + 1}`, iconX + iconSize / 2, y + cardPadding)
-
     const contentX = iconX + iconSize + Math.max(10, cardPadding)
-    const contentWidth = x + cellWidth - cardPadding - contentX
+    const contentWidth = x + layout.cardWidth - cardPadding - contentX
     const time = new Intl.DateTimeFormat(locale, {
       hour: '2-digit',
       minute: '2-digit',
@@ -380,7 +407,11 @@ export async function createTodayShareImage({
     const timeWidth = context.measureText(time).width
     context.fillStyle = '#8b86a0'
     context.textAlign = 'right'
-    context.fillText(time, x + cellWidth - cardPadding, y + cardPadding + 2)
+    context.fillText(
+      time,
+      x + layout.cardWidth - cardPadding,
+      y + cardPadding + 2,
+    )
 
     context.fillStyle = '#252236'
     context.textAlign = 'left'
@@ -388,7 +419,11 @@ export async function createTodayShareImage({
     setFont(context, 750, nameFont)
     const nameY = y + cardPadding
     context.fillText(
-      fitText(context, dutyName, contentWidth - timeWidth - 10),
+      fitText(
+        context,
+        `#${index + 1} ${dutyName}`,
+        contentWidth - timeWidth - 10,
+      ),
       contentX,
       nameY,
     )
@@ -406,8 +441,12 @@ export async function createTodayShareImage({
   context.fillStyle = '#8b86a0'
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  setFont(context, 650, 19)
-  context.fillText('FF14 MENTOR ROULETTE LOG', CANVAS_WIDTH / 2, 1295)
+  setFont(context, 650, 17)
+  context.fillText(
+    'FF14 MENTOR ROULETTE LOG',
+    layout.canvasWidth / 2,
+    layout.canvasHeight - 30,
+  )
 
   return canvasToBlob(canvas)
 }
