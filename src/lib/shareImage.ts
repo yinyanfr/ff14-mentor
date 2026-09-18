@@ -1,6 +1,11 @@
-import { dutyById, getDutyName } from '../data/duties'
+import {
+  dutyById,
+  getDutyName,
+  getDutyTags,
+  type DutyTag,
+} from '../data/duties'
 import { getJobIconPath, getJobName } from '../data/jobs'
-import type { DutyRecord, Job, Locale } from '../types'
+import type { DutyRecord, DutyType, Job, Locale } from '../types'
 
 const CANVAS_WIDTH = 1080
 const CANVAS_HEIGHT = 1350
@@ -14,6 +19,8 @@ interface ShareImageLabels {
   incomplete: string
   joinedInProgress: string
   noJob: string
+  dutyType: (type: DutyType) => string
+  dutyTag: (tag: DutyTag) => string
 }
 
 interface ShareImageOptions {
@@ -25,8 +32,79 @@ interface ShareImageOptions {
 
 export function calculateShareGrid(count: number) {
   if (count <= 0) return { columns: 0, rows: 0 }
-  const columns = Math.ceil(Math.sqrt(count))
+  const columns = Math.ceil(count / 8)
   return { columns, rows: Math.ceil(count / columns) }
+}
+
+type ShareBadgeTone =
+  | 'neutral'
+  | 'primary'
+  | 'mainScenario'
+  | 'crystalTower'
+  | 'guildhest'
+  | 'currentVersion'
+  | 'incomplete'
+  | 'joinedInProgress'
+
+interface ShareBadge {
+  text: string
+  tone: ShareBadgeTone
+}
+
+const badgeColors: Record<
+  ShareBadgeTone,
+  { foreground: string; background: string }
+> = {
+  neutral: { foreground: '#686377', background: '#efedf5' },
+  primary: { foreground: '#584dd5', background: '#eeecff' },
+  mainScenario: { foreground: '#9a5a14', background: '#fff0d8' },
+  crystalTower: { foreground: '#2b7895', background: '#e3f4fa' },
+  guildhest: { foreground: '#4f7e42', background: '#e9f5e5' },
+  currentVersion: { foreground: '#8b3f7f', background: '#f8e5f5' },
+  incomplete: { foreground: '#a56116', background: '#fff1dc' },
+  joinedInProgress: { foreground: '#287d72', background: '#e1f5f1' },
+}
+
+export function getShareRecordBadges(
+  record: DutyRecord,
+  locale: Locale,
+  labels: ShareImageLabels,
+): ShareBadge[] {
+  const duty = dutyById.get(record.dutyId)
+  return [
+    ...(duty
+      ? [
+          { text: `Lv ${duty.level.required}`, tone: 'neutral' as const },
+          ...(duty.type === 'guildhest'
+            ? []
+            : [
+                {
+                  text: labels.dutyType(duty.type),
+                  tone: 'primary' as const,
+                },
+              ]),
+          ...getDutyTags(record.dutyId).map((tag) => ({
+            text: labels.dutyTag(tag),
+            tone: tag,
+          })),
+        ]
+      : []),
+    {
+      text: record.job ? getJobName(record.job, locale) : labels.noJob,
+      tone: 'neutral',
+    },
+    ...(record.incomplete
+      ? [{ text: labels.incomplete, tone: 'incomplete' as const }]
+      : []),
+    ...(record.joinedInProgress
+      ? [
+          {
+            text: labels.joinedInProgress,
+            tone: 'joinedInProgress' as const,
+          },
+        ]
+      : []),
+  ]
 }
 
 function setFont(
@@ -69,39 +147,6 @@ function fitText(
     characters.pop()
   }
   return `${characters.join('')}…`
-}
-
-function wrapText(
-  context: CanvasRenderingContext2D,
-  value: string,
-  maxWidth: number,
-  maxLines = 2,
-) {
-  const characters = Array.from(value)
-  const lines: string[] = []
-  let current = ''
-
-  for (const character of characters) {
-    const candidate = `${current}${character}`
-    if (current && context.measureText(candidate).width > maxWidth) {
-      lines.push(current)
-      current = character
-      if (lines.length === maxLines - 1) break
-    } else {
-      current = candidate
-    }
-  }
-
-  if (lines.length < maxLines && current) lines.push(current)
-  const consumedLength = lines.join('').length
-  if (consumedLength < value.length && lines.length) {
-    lines[lines.length - 1] = fitText(
-      context,
-      `${lines[lines.length - 1]}…`,
-      maxWidth,
-    )
-  }
-  return lines
 }
 
 function loadImage(source: string) {
@@ -151,6 +196,45 @@ function drawBadge(
   context.textBaseline = 'middle'
   context.fillText(fitted, x + width / 2, y + (fontSize + 12) / 2)
   return width
+}
+
+function drawBadgeRows(
+  context: CanvasRenderingContext2D,
+  badges: readonly ShareBadge[],
+  x: number,
+  y: number,
+  maxWidth: number,
+  fontSize: number,
+) {
+  const gap = Math.max(4, fontSize * 0.45)
+  const badgeHeight = fontSize + 12
+  const maximumBadgeWidth = Math.max(44, (maxWidth - gap) / 2)
+  let cursorX = x
+  let cursorY = y
+
+  badges.forEach((badge) => {
+    setFont(context, 700, fontSize)
+    const desiredWidth = Math.min(
+      maximumBadgeWidth,
+      context.measureText(badge.text).width + 16,
+    )
+    if (cursorX > x && cursorX + desiredWidth > x + maxWidth) {
+      cursorX = x
+      cursorY += badgeHeight + gap
+    }
+    const colors = badgeColors[badge.tone]
+    const width = drawBadge(
+      context,
+      badge.text,
+      cursorX,
+      cursorY,
+      desiredWidth,
+      fontSize,
+      colors.foreground,
+      colors.background,
+    )
+    cursorX += width + gap
+  })
 }
 
 async function canvasToBlob(canvas: HTMLCanvasElement) {
@@ -218,22 +302,28 @@ export async function createTodayShareImage({
   const paddingX = 64
   const gridAreaTop = 245
   const gridBottom = 1238
-  const gap = Math.max(8, Math.min(20, 90 / Math.max(columns, rows)))
+  const gap = Math.max(7, Math.min(14, 82 / Math.max(columns, rows)))
   const cellWidth =
     (CANVAS_WIDTH - paddingX * 2 - gap * (columns - 1)) / columns
   const availableGridHeight = gridBottom - gridAreaTop
   const availableCellHeight = (availableGridHeight - gap * (rows - 1)) / rows
-  const maximumCellHeight = Math.max(220, Math.min(480, cellWidth * 1.15))
-  const cellHeight = Math.min(availableCellHeight, maximumCellHeight)
+  const cellHeight = Math.min(availableCellHeight, 165)
   const gridHeight = cellHeight * rows + gap * (rows - 1)
   const gridTop = gridAreaTop + (availableGridHeight - gridHeight) / 2
-  const cardRadius = Math.max(8, Math.min(20, cellWidth * 0.08))
-  const cardPadding = Math.max(8, Math.min(18, cellWidth * 0.07))
-  const smallFont = Math.max(9, Math.min(18, cellWidth * 0.065))
-  const nameFont = Math.max(11, Math.min(23, cellWidth * 0.09))
+  const cardRadius = Math.max(10, Math.min(18, cellHeight * 0.14))
+  const cardPadding = Math.max(8, Math.min(14, cellHeight * 0.08))
+  const smallFont = Math.max(
+    9,
+    Math.min(13, cellWidth * 0.025, cellHeight * 0.1),
+  )
+  const nameFont = Math.max(
+    12,
+    Math.min(20, cellWidth * 0.042, cellHeight * 0.15),
+  )
+  const badgeFont = Math.max(8, Math.min(11, smallFont - 1))
   const iconSize = Math.max(
-    24,
-    Math.min(54, cellHeight * 0.24, cellWidth * 0.24),
+    34,
+    Math.min(54, cellHeight - cardPadding * 2, cellWidth * 0.16),
   )
 
   sortedRecords.forEach((record, index) => {
@@ -253,24 +343,8 @@ export async function createTodayShareImage({
     context.fill()
     context.restore()
 
-    context.fillStyle = '#8b86a0'
-    context.textBaseline = 'top'
-    context.textAlign = 'left'
-    setFont(context, 700, smallFont)
-    context.fillText(`#${index + 1}`, x + cardPadding, y + cardPadding)
-
-    context.textAlign = 'right'
-    context.fillText(
-      new Intl.DateTimeFormat(locale, {
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(new Date(record.occurredAt)),
-      x + cellWidth - cardPadding,
-      y + cardPadding,
-    )
-
-    const iconX = x + (cellWidth - iconSize) / 2
-    const iconY = y + Math.max(32, cellHeight * 0.17)
+    const iconX = x + cardPadding
+    const iconY = y + (cellHeight - iconSize) / 2
     if (record.job && icons.get(record.job)) {
       context.drawImage(
         icons.get(record.job)!,
@@ -290,94 +364,43 @@ export async function createTodayShareImage({
       context.fillText('—', iconX + iconSize / 2, iconY + iconSize / 2)
     }
 
-    context.fillStyle = '#252236'
+    context.fillStyle = '#8b86a0'
+    context.textBaseline = 'top'
     context.textAlign = 'center'
+    setFont(context, 750, smallFont)
+    context.fillText(`#${index + 1}`, iconX + iconSize / 2, y + cardPadding)
+
+    const contentX = iconX + iconSize + Math.max(10, cardPadding)
+    const contentWidth = x + cellWidth - cardPadding - contentX
+    const time = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(record.occurredAt))
+    setFont(context, 650, smallFont)
+    const timeWidth = context.measureText(time).width
+    context.fillStyle = '#8b86a0'
+    context.textAlign = 'right'
+    context.fillText(time, x + cellWidth - cardPadding, y + cardPadding + 2)
+
+    context.fillStyle = '#252236'
+    context.textAlign = 'left'
     context.textBaseline = 'top'
     setFont(context, 750, nameFont)
-    const nameY = iconY + iconSize + Math.max(7, cellHeight * 0.035)
-    const lines = wrapText(
-      context,
-      dutyName,
-      cellWidth - cardPadding * 2,
-      cellHeight < 145 ? 1 : 2,
-    )
-    lines.forEach((line, lineIndex) => {
-      context.fillText(
-        line,
-        x + cellWidth / 2,
-        nameY + lineIndex * (nameFont + 5),
-      )
-    })
-
-    const metaY = Math.min(
-      y + cellHeight - smallFont * 2.1,
-      nameY + lines.length * (nameFont + 5) + 5,
-    )
-    const jobName = record.job ? getJobName(record.job, locale) : labels.noJob
-    const level = duty ? `Lv ${duty.level.required}` : ''
-    context.fillStyle = '#777286'
-    context.textAlign = 'center'
-    context.textBaseline = 'top'
-    setFont(context, 600, smallFont)
+    const nameY = y + cardPadding
     context.fillText(
-      fitText(
-        context,
-        [level, jobName].filter(Boolean).join(' · '),
-        cellWidth - 16,
-      ),
-      x + cellWidth / 2,
-      metaY,
+      fitText(context, dutyName, contentWidth - timeWidth - 10),
+      contentX,
+      nameY,
     )
 
-    if (cellHeight >= 155 && (record.incomplete || record.joinedInProgress)) {
-      const badgeFont = Math.max(9, smallFont - 2)
-      const badgeY = y + cellHeight - badgeFont - 21
-      const badges = [
-        ...(record.incomplete
-          ? [
-              {
-                text: labels.incomplete,
-                color: '#a56116',
-                background: '#fff1dc',
-              },
-            ]
-          : []),
-        ...(record.joinedInProgress
-          ? [
-              {
-                text: labels.joinedInProgress,
-                color: '#287d72',
-                background: '#e1f5f1',
-              },
-            ]
-          : []),
-      ]
-      const badgeGap = 6
-      const widths = badges.map((badge) => {
-        setFont(context, 700, badgeFont)
-        return Math.min(
-          cellWidth * 0.45,
-          context.measureText(badge.text).width + 16,
-        )
-      })
-      const totalWidth =
-        widths.reduce((sum, width) => sum + width, 0) +
-        badgeGap * Math.max(0, badges.length - 1)
-      let badgeX = x + (cellWidth - totalWidth) / 2
-      badges.forEach((badge, badgeIndex) => {
-        const width = drawBadge(
-          context,
-          badge.text,
-          badgeX,
-          badgeY,
-          widths[badgeIndex],
-          badgeFont,
-          badge.color,
-          badge.background,
-        )
-        badgeX += width + badgeGap
-      })
-    }
+    drawBadgeRows(
+      context,
+      getShareRecordBadges(record, locale, labels),
+      contentX,
+      nameY + nameFont + Math.max(6, cardPadding * 0.65),
+      contentWidth,
+      badgeFont,
+    )
   })
 
   context.fillStyle = '#8b86a0'

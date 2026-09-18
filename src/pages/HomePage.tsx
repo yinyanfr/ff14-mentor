@@ -101,6 +101,8 @@ export function HomePage() {
           incomplete: t('record.incomplete'),
           joinedInProgress: t('record.joinedInProgress'),
           noJob: t('jobs.none'),
+          dutyType: (type) => t(`dutyTypes.${type}`),
+          dutyTag: (tag) => t(`dutyTags.${tag}`),
         },
         filename: `ff14-mentor-${localDateKey(new Date())}.png`,
       })
