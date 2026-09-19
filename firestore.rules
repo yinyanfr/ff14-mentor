@@ -2,6 +2,52 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function ownsRecords(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validRecord(data) {
+      return data.keys().hasOnly([
+          'dutyId',
+          'job',
+          'incomplete',
+          'joinedInProgress',
+          'occurredAt',
+          'note',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.dutyId is int
+        && data.dutyId > 0
+        && (!data.keys().hasAny(['job'])
+          || (data.job is string
+            && data.job in [
+              'PLD', 'WAR', 'DRK', 'GNB',
+              'WHM', 'SCH', 'AST', 'SGE',
+              'MNK', 'DRG', 'NIN', 'SAM', 'RPR', 'VPR',
+              'BRD', 'MCH', 'DNC',
+              'BLM', 'SMN', 'RDM', 'PCT'
+            ]))
+        && data.incomplete is bool
+        && (!data.keys().hasAny(['joinedInProgress'])
+          || data.joinedInProgress is bool)
+        && data.occurredAt is timestamp
+        && data.note is string
+        && data.note.size() <= 500
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/records/{recordId} {
+      allow get, list: if ownsRecords(userId);
+      allow create: if ownsRecords(userId) && validRecord(request.resource.data);
+      allow update: if ownsRecords(userId)
+        && validRecord(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.occurredAt == resource.data.occurredAt;
+      allow delete: if ownsRecords(userId);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -9,6 +9,16 @@
     "public": "dist",
     "predeploy": ["npm run build"],
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "/sw.js",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      },
+      {
+        "source": "/manifest.webmanifest",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
@@ -17,11 +27,25 @@
     ]
   },
   "auth": {
+    "authorizedDomains": [
+      "localhost",
+      "ff14-mentor.web.app",
+      "ff14-mentor.firebaseapp.com"
+    ],
     "providers": {
       "googleSignIn": {
         "oAuthBrandDisplayName": "FF14 Mentor",
-        "supportEmail": "support@undefined.firebaseapp.com"
+        "supportEmail": "uvanianz@gmail.com"
       }
     }
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
   }
 }
