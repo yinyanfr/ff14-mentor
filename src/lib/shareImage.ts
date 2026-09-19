@@ -4,22 +4,38 @@ import {
   getDutyTags,
   type DutyTag,
 } from '../data/duties'
+import QRCode from 'qrcode'
+
 import { getJobIconPath, getJobName } from '../data/jobs'
 import type { DutyRecord, DutyType, Job, Locale } from '../types'
+import { buildTypeStats, countCompletedRecords } from './stats'
 
 const MIN_CANVAS_WIDTH = 720
 const CANVAS_PADDING_X = 56
 const GRID_TOP = 210
 const GRID_GAP = 14
-const MIN_CARD_HEIGHT = 100
-const FOOTER_HEIGHT = 70
+const CARD_SIZE = 300
+const CHART_GAP = 32
+const FOOTER_HEIGHT = 150
+const SHARE_APP_URL = 'https://ff14-mentor.web.app/'
+const chartColors = [
+  '#7066e8',
+  '#26a69a',
+  '#e3a44b',
+  '#dc6a86',
+  '#5596d8',
+  '#9c6bd6',
+  '#78909c',
+  '#c58b38',
+]
 const FONT_FAMILY =
   '"PingFang SC", "Hiragino Sans", "Noto Sans CJK SC", Arial, sans-serif'
 
 interface ShareImageLabels {
   title: string
   date: string
-  count: string
+  count: (count: number) => string
+  categories: string
   incomplete: string
   joinedInProgress: string
   noJob: string
@@ -40,10 +56,7 @@ export function calculateShareGrid(count: number) {
   return { columns, rows: Math.ceil(count / columns) }
 }
 
-export function calculateShareLayout(
-  count: number,
-  cardHeight = MIN_CARD_HEIGHT,
-) {
+export function calculateShareLayout(count: number, categoryCount = 1) {
   const { columns, rows } = calculateShareGrid(count)
   if (!columns || !rows) {
     return {
@@ -56,18 +69,29 @@ export function calculateShareLayout(
       gap: 0,
       paddingX: 0,
       gridTop: 0,
+      chartTop: 0,
+      chartHeight: 0,
+      legendColumns: 0,
+      footerTop: 0,
     }
   }
 
-  const cardWidth = columns === 1 ? 560 : columns === 2 ? 420 : 360
+  const cardWidth = CARD_SIZE
   const gridWidth = cardWidth * columns + GRID_GAP * (columns - 1)
   const canvasWidth = Math.max(
     MIN_CANVAS_WIDTH,
     gridWidth + CANVAS_PADDING_X * 2,
   )
   const paddingX = (canvasWidth - gridWidth) / 2
-  const canvasHeight =
-    GRID_TOP + cardHeight * rows + GRID_GAP * (rows - 1) + FOOTER_HEIGHT
+  const chartTop =
+    GRID_TOP + CARD_SIZE * rows + GRID_GAP * (rows - 1) + CHART_GAP
+  const legendColumns = Math.min(
+    4,
+    Math.max(2, Math.floor((canvasWidth - CANVAS_PADDING_X * 2) / 230)),
+  )
+  const chartHeight = 112 + Math.ceil(categoryCount / legendColumns) * 30
+  const footerTop = chartTop + chartHeight + 22
+  const canvasHeight = footerTop + FOOTER_HEIGHT
 
   return {
     columns,
@@ -75,10 +99,14 @@ export function calculateShareLayout(
     canvasWidth,
     canvasHeight,
     cardWidth,
-    cardHeight,
+    cardHeight: CARD_SIZE,
     gap: GRID_GAP,
     paddingX,
     gridTop: GRID_TOP,
+    chartTop,
+    chartHeight,
+    legendColumns,
+    footerTop,
   }
 }
 
@@ -153,6 +181,32 @@ export function getShareRecordBadges(
   ]
 }
 
+export function getShareCategoryStats(
+  records: readonly DutyRecord[],
+  labels: ShareImageLabels,
+) {
+  return buildTypeStats([...records])
+    .map((item, index) => ({
+      ...item,
+      name:
+        item.type === 'mainScenario'
+          ? labels.dutyTag('mainScenario')
+          : labels.dutyType(item.type),
+      color: chartColors[index],
+    }))
+    .filter((item) => item.count > 0)
+}
+
+export function getShareSummary(
+  records: readonly DutyRecord[],
+  labels: ShareImageLabels,
+) {
+  return {
+    countLabel: labels.count(countCompletedRecords([...records])),
+    categories: getShareCategoryStats(records, labels),
+  }
+}
+
 function setFont(
   context: CanvasRenderingContext2D,
   weight: number,
@@ -193,6 +247,48 @@ function fitText(
     characters.pop()
   }
   return `${characters.join('')}…`
+}
+
+export function wrapShareTitle(
+  value: string,
+  maxWidth: number,
+  measureText: (text: string) => number,
+) {
+  const characters = Array.from(value)
+  const lines: string[] = []
+  let line = ''
+
+  for (const character of characters) {
+    if (line && measureText(line + character) > maxWidth) {
+      lines.push(line)
+      line = character
+    } else {
+      line += character
+    }
+  }
+  if (line) lines.push(line)
+
+  return lines
+}
+
+export function layoutShareTitle(
+  context: CanvasRenderingContext2D,
+  value: string,
+  maxWidth: number,
+) {
+  for (let fontSize = 18; fontSize >= 10; fontSize -= 1) {
+    setFont(context, 750, fontSize)
+    const lines = wrapShareTitle(
+      value,
+      maxWidth,
+      (text) => context.measureText(text).width,
+    )
+    if (lines.length <= 2 || fontSize === 10) {
+      return { lines, fontSize, lineHeight: fontSize + 3 }
+    }
+  }
+
+  throw new Error('Could not lay out share title')
 }
 
 function loadImage(source: string) {
@@ -244,42 +340,59 @@ function drawBadge(
   return width
 }
 
-function drawBadgeRows(
+function layoutBadgeRows(
   context: CanvasRenderingContext2D,
   badges: readonly ShareBadge[],
+  maxWidth: number,
+  fontSize: number,
+) {
+  const gap = 3
+  const rows: { badge: ShareBadge; width: number }[][] = [[]]
+  let rowWidth = 0
+
+  badges.forEach((badge) => {
+    setFont(context, 700, fontSize)
+    const width = Math.min(maxWidth, context.measureText(badge.text).width + 16)
+    if (rowWidth && rowWidth + gap + width > maxWidth) {
+      rows.push([])
+      rowWidth = 0
+    }
+    rows[rows.length - 1].push({ badge, width })
+    rowWidth += (rowWidth ? gap : 0) + width
+  })
+
+  return rows
+}
+
+function drawBadgeRows(
+  context: CanvasRenderingContext2D,
+  rows: ReturnType<typeof layoutBadgeRows>,
   x: number,
   y: number,
   maxWidth: number,
   fontSize: number,
 ) {
-  const gap = Math.max(4, fontSize * 0.45)
+  const gap = 3
   const badgeHeight = fontSize + 12
-  const maximumBadgeWidth = Math.max(44, (maxWidth - gap) / 2)
-  let cursorX = x
-  let cursorY = y
 
-  badges.forEach((badge) => {
-    setFont(context, 700, fontSize)
-    const desiredWidth = Math.min(
-      maximumBadgeWidth,
-      context.measureText(badge.text).width + 16,
-    )
-    if (cursorX > x && cursorX + desiredWidth > x + maxWidth) {
-      cursorX = x
-      cursorY += badgeHeight + gap
-    }
-    const colors = badgeColors[badge.tone]
-    const width = drawBadge(
-      context,
-      badge.text,
-      cursorX,
-      cursorY,
-      desiredWidth,
-      fontSize,
-      colors.foreground,
-      colors.background,
-    )
-    cursorX += width + gap
+  rows.forEach((row, rowIndex) => {
+    const width =
+      row.reduce((sum, item) => sum + item.width, 0) + gap * (row.length - 1)
+    let cursorX = x + (maxWidth - width) / 2
+    row.forEach(({ badge, width: badgeWidth }) => {
+      const colors = badgeColors[badge.tone]
+      drawBadge(
+        context,
+        badge.text,
+        cursorX,
+        y + rowIndex * (badgeHeight + gap),
+        badgeWidth,
+        fontSize,
+        colors.foreground,
+        colors.background,
+      )
+      cursorX += badgeWidth + gap
+    })
   })
 }
 
@@ -309,14 +422,16 @@ export async function createTodayShareImage({
   const sortedRecords = [...records].sort(
     (left, right) => Date.parse(left.occurredAt) - Date.parse(right.occurredAt),
   )
-  const maximumBadgeCount = Math.max(
-    ...sortedRecords.map(
-      (record) => getShareRecordBadges(record, locale, labels).length,
-    ),
+  const { countLabel, categories } = getShareSummary(sortedRecords, labels)
+  const layout = calculateShareLayout(sortedRecords.length, categories.length)
+  const qrCode = await loadImage(
+    await QRCode.toDataURL(SHARE_APP_URL, {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 116,
+    }),
   )
-  const badgeRows = Math.ceil(maximumBadgeCount / 2)
-  const cardHeight = Math.max(MIN_CARD_HEIGHT, 45 + badgeRows * 27)
-  const layout = calculateShareLayout(sortedRecords.length, cardHeight)
+  if (!qrCode) throw new Error('Could not create QR code')
   const canvas = document.createElement('canvas')
   canvas.width = layout.canvasWidth
   canvas.height = layout.canvasHeight
@@ -336,28 +451,45 @@ export async function createTodayShareImage({
   context.fillRect(0, 0, layout.canvasWidth, layout.canvasHeight)
 
   context.fillStyle = '#7066e8'
-  roundedRect(context, layout.paddingX, 48, 116, 10, 5)
+  roundedRect(context, CANVAS_PADDING_X, 48, 116, 10, 5)
   context.fill()
   context.fillStyle = '#252236'
   context.textAlign = 'left'
   context.textBaseline = 'alphabetic'
-  setFont(context, 800, 44)
-  context.fillText(labels.title, layout.paddingX, 126)
+  setFont(context, 800, 54)
+  const availableTitleWidth =
+    layout.canvasWidth -
+    CANVAS_PADDING_X * 2 -
+    context.measureText(countLabel).width -
+    24
+  let titleSize = 44
+  setFont(context, 800, titleSize)
+  while (
+    context.measureText(labels.title).width > availableTitleWidth &&
+    titleSize > 28
+  ) {
+    titleSize -= 2
+    setFont(context, 800, titleSize)
+  }
+  context.fillText(
+    fitText(context, labels.title, availableTitleWidth),
+    CANVAS_PADDING_X,
+    126,
+  )
   context.fillStyle = '#69647c'
   setFont(context, 600, 23)
-  context.fillText(labels.date, layout.paddingX, 168)
+  context.fillText(labels.date, CANVAS_PADDING_X, 168)
   context.textAlign = 'right'
   context.fillStyle = '#7066e8'
   setFont(context, 800, 54)
-  context.fillText(labels.count, layout.canvasWidth - layout.paddingX, 132)
+  context.fillText(countLabel, layout.canvasWidth - CANVAS_PADDING_X, 132)
 
   const icons = await loadJobIcons(sortedRecords)
-  const cardRadius = 16
-  const cardPadding = 12
+  const cardRadius = 18
+  const cardPadding = 16
   const smallFont = 12
-  const nameFont = 18
   const badgeFont = 10
-  const iconSize = 54
+  const iconSize = 60
 
   sortedRecords.forEach((record, index) => {
     const column = index % layout.columns
@@ -369,15 +501,49 @@ export async function createTodayShareImage({
 
     context.save()
     context.shadowColor = 'rgba(48, 42, 78, 0.09)'
-    context.shadowBlur = 14
-    context.shadowOffsetY = 5
+    context.shadowBlur = 16
+    context.shadowOffsetY = 6
     roundedRect(context, x, y, layout.cardWidth, layout.cardHeight, cardRadius)
     context.fillStyle = 'rgba(255, 255, 255, 0.92)'
     context.fill()
     context.restore()
 
-    const iconX = x + cardPadding
-    const iconY = y + (layout.cardHeight - iconSize) / 2
+    context.fillStyle = '#8b86a0'
+    context.textBaseline = 'top'
+    context.textAlign = 'left'
+    setFont(context, 700, smallFont)
+    context.fillText(`#${index + 1}`, x + cardPadding, y + cardPadding)
+    context.textAlign = 'right'
+    setFont(context, 650, smallFont)
+    context.fillText(
+      new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(record.occurredAt)),
+      x + layout.cardWidth - cardPadding,
+      y + cardPadding,
+    )
+
+    context.fillStyle = '#252236'
+    context.textAlign = 'center'
+    context.textBaseline = 'top'
+    const title = layoutShareTitle(
+      context,
+      dutyName,
+      layout.cardWidth - cardPadding * 2,
+    )
+    const badgeRows = layoutBadgeRows(
+      context,
+      getShareRecordBadges(record, locale, labels),
+      layout.cardWidth - cardPadding * 2,
+      badgeFont,
+    )
+    const badgeHeight =
+      badgeRows.length * (badgeFont + 12) + (badgeRows.length - 1) * 3
+    const contentHeight =
+      iconSize + 14 + title.lines.length * title.lineHeight + 8 + badgeHeight
+    const iconX = x + (layout.cardWidth - iconSize) / 2
+    const iconY = y + Math.max(28, (layout.cardHeight - contentHeight) / 2)
     if (record.job && icons.get(record.job)) {
       context.drawImage(
         icons.get(record.job)!,
@@ -397,56 +563,110 @@ export async function createTodayShareImage({
       context.fillText('—', iconX + iconSize / 2, iconY + iconSize / 2)
     }
 
-    const contentX = iconX + iconSize + Math.max(10, cardPadding)
-    const contentWidth = x + layout.cardWidth - cardPadding - contentX
-    const time = new Intl.DateTimeFormat(locale, {
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(record.occurredAt))
-    setFont(context, 650, smallFont)
-    const timeWidth = context.measureText(time).width
-    context.fillStyle = '#8b86a0'
-    context.textAlign = 'right'
-    context.fillText(
-      time,
-      x + layout.cardWidth - cardPadding,
-      y + cardPadding + 2,
-    )
-
     context.fillStyle = '#252236'
-    context.textAlign = 'left'
+    context.textAlign = 'center'
     context.textBaseline = 'top'
-    setFont(context, 750, nameFont)
-    const nameY = y + cardPadding
-    context.fillText(
-      fitText(
-        context,
-        `#${index + 1} ${dutyName}`,
-        contentWidth - timeWidth - 10,
-      ),
-      contentX,
-      nameY,
-    )
+    setFont(context, 750, title.fontSize)
+    const nameY = iconY + iconSize + 14
+    title.lines.forEach((line, lineIndex) => {
+      context.fillText(
+        line,
+        x + layout.cardWidth / 2,
+        nameY + lineIndex * title.lineHeight,
+      )
+    })
 
     drawBadgeRows(
       context,
-      getShareRecordBadges(record, locale, labels),
-      contentX,
-      nameY + nameFont + Math.max(6, cardPadding * 0.65),
-      contentWidth,
+      badgeRows,
+      x + cardPadding,
+      nameY + title.lines.length * title.lineHeight + 8,
+      layout.cardWidth - cardPadding * 2,
       badgeFont,
     )
   })
 
-  context.fillStyle = '#8b86a0'
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  setFont(context, 650, 17)
+  const chartX = CANVAS_PADDING_X
+  const chartWidth = layout.canvasWidth - chartX * 2
+  roundedRect(
+    context,
+    chartX,
+    layout.chartTop,
+    chartWidth,
+    layout.chartHeight,
+    18,
+  )
+  context.fillStyle = 'rgba(255, 255, 255, 0.92)'
+  context.fill()
+
+  context.fillStyle = '#252236'
+  context.textAlign = 'left'
+  context.textBaseline = 'top'
+  setFont(context, 750, 20)
+  context.fillText(labels.categories, chartX + 22, layout.chartTop + 20)
+
+  const barX = chartX + 22
+  const barY = layout.chartTop + 58
+  const barWidth = chartWidth - 44
+  const total = categories.reduce((sum, item) => sum + item.count, 0)
+  context.save()
+  roundedRect(context, barX, barY, barWidth, 24, 12)
+  context.clip()
+  context.fillStyle = '#efedf5'
+  context.fillRect(barX, barY, barWidth, 24)
+  let barOffset = 0
+  categories.forEach((item) => {
+    const segmentWidth = total ? (barWidth * item.count) / total : 0
+    context.fillStyle = item.color
+    context.fillRect(barX + barOffset, barY, segmentWidth, 24)
+    barOffset += segmentWidth
+  })
+  context.restore()
+
+  const legendWidth = barWidth / layout.legendColumns
+  categories.forEach((item, index) => {
+    const legendX = barX + (index % layout.legendColumns) * legendWidth
+    const legendY =
+      layout.chartTop + 100 + Math.floor(index / layout.legendColumns) * 30
+    context.fillStyle = item.color
+    roundedRect(context, legendX, legendY + 3, 10, 10, 5)
+    context.fill()
+    context.fillStyle = '#514d62'
+    context.textAlign = 'left'
+    setFont(context, 600, 13)
+    context.fillText(
+      fitText(context, item.name, legendWidth - 65),
+      legendX + 18,
+      legendY,
+    )
+    context.textAlign = 'right'
+    setFont(context, 750, 13)
+    context.fillText(
+      item.count.toLocaleString(locale),
+      legendX + legendWidth - 14,
+      legendY,
+    )
+  })
+
+  const qrSize = 126
+  const qrX = layout.canvasWidth - CANVAS_PADDING_X - qrSize
+  const qrY = layout.footerTop + 10
+  roundedRect(context, qrX, qrY, qrSize, qrSize, 12)
+  context.fillStyle = '#ffffff'
+  context.fill()
+  context.drawImage(qrCode, qrX + 5, qrY + 5, 116, 116)
+
+  context.fillStyle = '#686377'
+  context.textAlign = 'left'
+  context.textBaseline = 'top'
+  setFont(context, 750, 17)
   context.fillText(
     'FF14 MENTOR ROULETTE LOG',
-    layout.canvasWidth / 2,
-    layout.canvasHeight - 30,
+    CANVAS_PADDING_X,
+    layout.footerTop + 45,
   )
+  setFont(context, 600, 18)
+  context.fillText(SHARE_APP_URL, CANVAS_PADDING_X, layout.footerTop + 77)
 
   return canvasToBlob(canvas)
 }

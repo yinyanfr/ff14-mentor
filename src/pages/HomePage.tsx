@@ -97,7 +97,8 @@ export function HomePage() {
         labels: {
           title: t('share.title'),
           date: dateLabel,
-          count: t('share.count', { count: today.length }),
+          count: (count) => t('share.count', { count }),
+          categories: t('share.categories'),
           incomplete: t('record.incomplete'),
           joinedInProgress: t('record.joinedInProgress'),
           noJob: t('jobs.none'),

@@ -91,6 +91,7 @@ const resources = {
         generating: '正在生成分享图片',
         title: '今日导随记录',
         count: '{{count}} 次',
+        categories: '今日副本分类',
         failed: '分享图片生成失败，请重试。',
       },
       record: {
@@ -224,6 +225,7 @@ const resources = {
         generating: '正在產生分享圖片',
         title: '今日導隨記錄',
         count: '{{count}} 次',
+        categories: '今日副本分類',
         failed: '無法產生分享圖片，請重試。',
       },
       record: {
@@ -359,6 +361,7 @@ const resources = {
         generating: '共有画像を作成中',
         title: '今日のメンタールーレット',
         count: '{{count}} 回',
+        categories: '今日のコンテンツ内訳',
         failed: '共有画像を作成できませんでした。',
       },
       record: {
@@ -494,6 +497,7 @@ const resources = {
         generating: 'Creating share image',
         title: "Today's mentor duties",
         count: '{{count}} runs',
+        categories: "Today's duty categories",
         failed: 'Could not create the share image. Please try again.',
       },
       record: {
@@ -629,6 +633,7 @@ const resources = {
         generating: 'Bild wird erstellt',
         title: 'Heutige Mentor-Inhalte',
         count: '{{count}} Einsätze',
+        categories: 'Heutige Inhaltskategorien',
         failed: 'Das Bild konnte nicht erstellt werden.',
       },
       record: {
@@ -765,6 +770,7 @@ const resources = {
         generating: 'Création de l’image',
         title: 'Missions mentor du jour',
         count: '{{count}} missions',
+        categories: 'Catégories du jour',
         failed: 'Impossible de créer l’image de partage.',
       },
       record: {
@@ -901,6 +907,7 @@ const resources = {
         generating: '공유 이미지 생성 중',
         title: '오늘의 멘토 임무',
         count: '{{count}}회',
+        categories: '오늘의 임무 분류',
         failed: '공유 이미지를 만들지 못했습니다.',
       },
       record: {
